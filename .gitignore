@@ -1,0 +1,10 @@
+#data files
+
+data
+
+#temporary files
+
+*~
+*.swp
+
+
