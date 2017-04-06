@@ -4,8 +4,7 @@ import json
 import re
 import numpy as np
 import sys
-sys.path.append('/home/nina/Documents/hockey_tracking/number_recognition/number_recognition/utils/')
-from blob import filterBlobsBySize, filterBlobsByField, getBlobsFromMasks, getNearestBlob
+from .blob import filterBlobsBySize, filterBlobsByField, getBlobsFromMasks, getNearestBlob
 
 class Marking:
     def __init__(self):
@@ -28,6 +27,23 @@ class Marking:
             if len(markObjects) != 0:
                 subdict[nameImage] = markObjects
         return subdict
+    def filterByField(self, minHeight, maxHeight, minWidth, maxWidth):
+        imgObjDict = self.dictMarkIms["annotation"]
+        for nameImage, objects in imgObjDict.items():
+            objs = objects["objects"]
+            newobjs = []
+            for obj in objs:
+                rect = obj['body_rect']
+                x, y, h, w = rect['x'], rect['y'], rect['h'], rect['w']
+                if y >= minHeight and y + h <= maxHeight \
+                        and x >= minWidth and x + w <= maxWidth:
+                    newobjs.append(obj)
+            objects["objects"] = newobjs
+    
+    def saveJson(self, outfile):
+        json.dump(self.dictMarkIms, outfile, sort_keys = True)
+
+
 
 class MarkingApproximator:
     def __init__(self):
@@ -135,7 +151,7 @@ class BaseMarkingCreator:
         pass
 
     def clear(self):
-        self.blobs = []
+        self.blobs = {}
 
     def filterBySize(self, minHeight, maxHeight, minWidth, manWidth):
         for image in self.blobs.keys():
