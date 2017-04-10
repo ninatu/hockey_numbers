@@ -3,9 +3,13 @@
 from libs.marking import Marking, MarkingStatictics
 import numpy as np
 import os.path as osp
+import argparse
 
+parser = argparse.ArgumentParser()
+parser.add_argument('marking_file', nargs='?', help='input file with marking')
+args = parser.parse_args()
 
-markingFile = '/media/nina/Seagate Backup Plus Drive/hockey/marking/marking/sparse_frames/part3600_end13600_step100/marking.json'
+markingFile = args.marking_file
 outPath = osp.join(osp.dirname(markingFile), 'statistics.txt')
 
 with open(outPath, 'w') as outFile:
