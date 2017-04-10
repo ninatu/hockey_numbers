@@ -25,7 +25,7 @@ nb_epoch_images = 20000
 nb_epoch_images_test = int(nb_epoch_images * 0.1)
 
 # input image dimensions
-img_rows, img_cols = 256, 256
+img_rows, img_cols = 128, 64
 #Images are RGB.
 img_channels = 3
 
@@ -42,7 +42,7 @@ datagen = ImageDataGenerator(
     featurewise_std_normalization=False,  # divide inputs by std of the dataset
     samplewise_std_normalization=False,  # divide each input by its std
     zca_whitening=False,  # apply ZCA whitening
-    rotation_range=90,  # randomly rotate images in the range (degrees, 0 to 180)
+    rotation_range=20,  # randomly rotate images in the range (degrees, 0 to 180)
     width_shift_range=0.1,  # randomly shift images horizontally (fraction of total width)
     height_shift_range=0.1,  # randomly shift images vertically (fraction of total height)
     horizontal_flip=True,  # randomly flip images
@@ -68,4 +68,4 @@ model.fit_generator(train_generator,
                     validation_steps=nb_epoch_images_test / batch_size,
                     callbacks=callbacks)
 
-model.save("model_result")
+model.save("model_result" )
