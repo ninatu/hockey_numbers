@@ -14,6 +14,7 @@ from libs.imageProcess import cropByRect
 parser = argparse.ArgumentParser()
 parser.add_argument('marking_file', type=str, nargs='?', help='input marking file')
 parser.add_argument('outdir', type=str, nargs='?', help='dir to ouput')
+parser.add_argument('mark', type=str, nargs='?', help='image mark to be saved')
 
 frame_dir = '/media/nina/Seagate Backup Plus Drive/hockey/frames'
 args = parser.parse_args()
@@ -32,7 +33,7 @@ outdir = args.outdir
 if not os.path.exists(outdir):
     os.mkdir(outdir)
 
-for name, objs in marking.getByMark("number_isnt_visible").items():
+for name, objs in marking.getByMark(args.mark).items():
     frame = cv2.imread(os.path.join(frame_dir, name))
     for obj in objs:
         rect = obj['body_rect']

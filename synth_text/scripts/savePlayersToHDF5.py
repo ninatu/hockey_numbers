@@ -76,7 +76,7 @@ if inpaint:
             img = cropByRect(frame, body_rect)
             mask = cropByRect(maskframe, body_rect)
             numberMasks= classify.findMaskOfNumber(img, mask, clf)
-            if (len(numberMasks) < 1):
+            if (len(numberMasks) < 2):
                 continue
             img = bgr2rgb(img)
             newImg = img.copy()    

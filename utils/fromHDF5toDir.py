@@ -6,6 +6,7 @@ import os
 import sys
 import hashlib
 import base64
+import tqdm
 from PIL import Image
 
 
@@ -28,16 +29,15 @@ outdir = args.outdir
 if not os.path.exists(outdir):
     os.mkdir(outdir)
 
-for n in range(99, 100):
+for n in range(1, 100):
     dirname = '{}'.format(n)
     dirname = os.path.join(outdir, dirname)
     if not os.path.exists(dirname):
         os.mkdir(dirname)
 
 
-for name, img_data in dataGroup.items():
+for name, img_data in tqdm.tqdm(dataGroup.items()):
     mark = img_data.attrs['txt'][0].decode('utf-8')
-    print (mark)
     if int(mark) > 99:
         continue
     img = img_data.value
