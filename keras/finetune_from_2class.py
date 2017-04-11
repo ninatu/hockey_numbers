@@ -12,12 +12,12 @@ from keras.initializers import RandomNormal
 from PIL import ImageFile
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
-lr_reducer = ReduceLROnPlateau(monitor='val_loss', factor=np.sqrt(0.1), cooldown=0, patience=10, verbose=1, min_lr=1e-7)
-early_stopper = EarlyStopping(monitor='val_acc', min_delta=0.001, patience=10)
-csv_logger = CSVLogger('./model/ft_100class.csv')
-checkpoint_step1 = ModelCheckpoint('./model/checkpoints/ft_100class/weights_step1.{epoch:02d}-{val_loss:.2f}.hdf5', monitor='val_loss', verbose=0, save_best_only=False, save_weights_only=False, mode='auto')
-checkpoint_step2 = ModelCheckpoint('./model/checkpoints/ft_100class/weights_step2.{epoch:02d}-{val_loss:.2f}.hdf5', monitor='val_loss', verbose=0, save_best_only=False, save_weights_only=False, mode='auto')
-#tensorboard = None#TensorBoard(log_dir='./model/logs', histogram_freq=0, write_graph=False, write_images=True)
+lr_reducer = ReduceLROnPlateau(monitor='val_loss', factor=np.sqrt(0.1), cooldown=0, patience=5, verbose=1, min_lr=1e-7)
+early_stopper = EarlyStopping(monitor='acc', min_delta=0.0001, patience=10)
+csv_logger = CSVLogger('./model/ft_100class_2.csv')
+checkpoint_step1 = ModelCheckpoint('./model/checkpoints/ft_100class_2/weights_step1.{epoch:02d}-{val_loss:.2f}.hdf5', monitor='val_loss', verbose=0, save_best_only=False, save_weights_only=False, mode='auto')
+checkpoint_step2 = ModelCheckpoint('./model/checkpoints/ft_100class_2/weights_step2.{epoch:02d}-{val_loss:.2f}.hdf5', monitor='val_loss', verbose=0, save_best_only=False, save_weights_only=False, mode='auto')
+tensorboard = None#TensorBoard(log_dir='./model/logs', histogram_freq=0, write_graph=False, write_images=True)
 
 #callbacks = [lr_reducer, early_stopper, csv_logger, checkpoint]
 #callbacks = [c for c in callbacks if c is not None]
@@ -59,7 +59,7 @@ datagen = ImageDataGenerator(
     vertical_flip=False)  # randomly flip images
 
 train_generator = datagen.flow_from_directory(
-        'images/data/train',
+        'images/data/train_large',
         target_size=(img_rows, img_cols),
         batch_size=batch_size,
         class_mode="categorical")
@@ -88,7 +88,7 @@ model.fit_generator(train_generator,
                     validation_steps=nb_epoch_images_test / batch_size,
                     callbacks=callbacks)
 
-model.save("model/model_ft_100class_1.h5" )
+model.save("model/model_ft_100class_21.h5" )
 
 # step2
 for layer in base_model.layers:
@@ -107,5 +107,5 @@ model.fit_generator(train_generator,
                     validation_steps=nb_epoch_images_test / batch_size,
                     callbacks=callbacks)
 
-model.save("model/model_ft_100class_2.h5" )
+model.save("model/model_ft_100class_22.h5" )
 
