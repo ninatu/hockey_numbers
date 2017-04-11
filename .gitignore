@@ -12,5 +12,3 @@ data
 __pycache__
 .ipynb_checkpoints
 
-# externals liblaries
-classifying

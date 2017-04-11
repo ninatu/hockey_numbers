@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
 import cv2
 import numpy as np
 
@@ -80,12 +83,4 @@ def getBlobsFromMasks(mask, saveMasks=False):
     else:
         blobs = [Blob.create_from_stats(stats[i, :], centroids[i, :]) for i in range(stats.shape[0])]
     return blobs
-
-if __name__ == '__main__':
-    nameMask = '/media/nina/Seagate Backup Plus Drive/hockey/masks/mask2400.png'
-    imageMask = cv2.imread(nameMask)[:, :, 0]
-    blobs = getBlobsFromMasks(imageMask)
-    blobs = filterBlobsBySize(blobs)
-
-
 
