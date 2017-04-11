@@ -6,6 +6,8 @@ data
 
 *~
 *.swp
+*.swo
 
 *.pyc
 __pycache__
+.ipynb_checkpoints

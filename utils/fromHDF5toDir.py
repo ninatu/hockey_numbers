@@ -28,7 +28,7 @@ outdir = args.outdir
 if not os.path.exists(outdir):
     os.mkdir(outdir)
 
-for n in range(1, 99):
+for n in range(99, 100):
     dirname = '{}'.format(n)
     dirname = os.path.join(outdir, dirname)
     if not os.path.exists(dirname):
@@ -37,6 +37,9 @@ for n in range(1, 99):
 
 for name, img_data in dataGroup.items():
     mark = img_data.attrs['txt'][0].decode('utf-8')
+    print (mark)
+    if int(mark) > 99:
+        continue
     img = img_data.value
     dirname = os.path.join(outdir, mark)
     outpath = os.path.join(dirname, '{}.png'.format(md5_hash(img)))
