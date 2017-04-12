@@ -3,6 +3,8 @@
 
 import cv2
 import numpy as np
+import hashlib
+import base64
 
 def getOrientation(bin_image, union_all=False):
     _, contours, hierarchy = cv2.findContours(bin_image, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
@@ -55,9 +57,16 @@ def cropByMask(image, mask, center):
     center = center[0] - n_x, center[1] - n_y
     return image, mask, center, (n_w, n_h)
 
-def cropByRect(frame, rect):
-    x, y, w, h = map(int, [rect["x"], rect["y"], rect["w"],rect["h"]])
+def cropByRect(frame, x, y, w, h):
+    #x, y, w, h = map(int, [rect["x"], rect["y"], rect["w"],rect["h"]])
     return frame[y:y+h, x:x+w]
+
+def md5_hash(arr):
+    arr = np.array(arr, dtype=arr.dtype)
+    md5 = hashlib.md5()
+    arr = base64.b64encode(arr)
+    md5.update(arr)
+    return md5.hexdigest()
 
 def bgr2lab(img):
     return cv2.cvtColor(img, cv2.COLOR_BGR2Lab)

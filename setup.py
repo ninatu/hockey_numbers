@@ -14,4 +14,6 @@ setup(
     maintainer='ninatu',
     maintainer_email='nina.tuluptseva@graphics.cs.msu.ru', 
     packages=find_packages(),
-    entry_points={'console_scripts': ['create_row_frame_markup = hockey_numbers.markup.create_row_frame_markup.py']})
+    #install_requires=['opencv3.1.0, scipy, tqdm, h5py, pillow, sklearn'],
+    entry_points={'console_scripts': ['save_blobs_to_hdf5 = hockey_numbers.markup.save_blobs_to_hdf5:main',
+                                      'save_frames_to_dir = hockey_numbers.markup.save_frames_to_dir:main']})

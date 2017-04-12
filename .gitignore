@@ -9,7 +9,7 @@
 *.pyc
 __pycache__
 .ipynb_checkpoints
-
+.idea
 
 dist
 hockey_numbers.egg-info/

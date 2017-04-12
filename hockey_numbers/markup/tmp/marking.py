@@ -5,7 +5,7 @@ import os.path as osp
 import json
 import re
 import cv2
-from ..constants import MASK_DIR, TEMPLATE_IMAGE, TEMPLATE_MASK
+from hockey_numbers.markup.constants import MASK_DIR, TEMPLATE_IMAGE, TEMPLATE_MASK
 from .blob import filterBlobsBySize, filterBlobsByField, getBlobsFromMasks, getNearestBlob
 
 class Marking:
@@ -143,12 +143,14 @@ class BaseMarkingCreator:
 
     def addFrames(self, frameNumbers):
         for numb in frameNumbers:
-            nameMask = self.masksDir + self.templateMasks.format(numb)
+            nameMask = osp.join(self.masksDir, self.templateMasks.format(numb))
             nameImage = self.templateImages.format(numb)
             mask = cv2.imread(nameMask)
             if mask is not None:
                 mask = mask[:, :, 0]
                 self.blobs[nameImage] = getBlobsFromMasks(mask)
+            else:
+                sys.stderr.write('Mask № {:d} by path {:s} not found!\n'.format(numb, nameMask))
 
     def clear(self):
         self.blobs = {}
@@ -160,6 +162,9 @@ class BaseMarkingCreator:
     def filterByField(self, minHeight, maxHeight, minWidth, manWidth):
         for image in self.blobs.keys():
             self.blobs[image] = filterBlobsByField(self.blobs[image], minHeight, maxHeight, minWidth, manWidth)
+    
+    def getBlobs(self):
+        return self.blobs.copy()
 
     def saveAsJson(self, outFile):
         dictBlobs = {}
@@ -170,7 +175,7 @@ class BaseMarkingCreator:
                                               'h': float(blob.height), 'w': float(blob.width)}})
             if len(objects) != 0:
                 dictBlobs[image] = {"objects": objects}
-        json.dump(dictBlobs, outFile, sort_keys = True, indent = 4)
+        json.dump(dictBlobs, outFile, sort_keys = True)
 
 class MarkingStatictics:
     def __init__(self):

@@ -1,34 +1,35 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+import os
 import os.path as osp
 import argparse
 import sys
 import cv2
-from constants import VIDEO_DIR, VIDEO_FRAME_SIZE, TEMPLATE_VIDEO
-from constants import BLOB_MIN_HEIGHT, BLOB_MAX_HEIGHT, BLOB_MIN_WIDTH, BLOB_MAX_WIDTH
-from constants import FIELD_Y, FIELD_H, FIELD_X, FIELD_W
-from utils.marking import BaseMarkingCreator
+import tqdm
+from hockey_numbers.markup.constants import VIDEO_DIR, VIDEO_FRAME_SIZE, TEMPLATE_VIDEO, TEMPLATE_FRAME
+from hockey_numbers.markup.constants import BLOB_MIN_HEIGHT, BLOB_MAX_HEIGHT, BLOB_MIN_WIDTH, BLOB_MAX_WIDTH
+from hockey_numbers.markup.constants import FIELD_Y, FIELD_H, FIELD_X, FIELD_W
+from hockey_numbers.markup.utils.marking import BaseMarkingCreator
 
-def save_frames(frame_numbers, path_to_save):
+def save_frames(frame_numbers, dir_to_save):
+    if not osp.exists(dir_to_save):
+        os.mkdir(dir_to_save)
     frame_numbers = set(frame_numbers)
-    start_frame = int(min(frame_numbers) / VIDEO_FRAME_SIZE) * VIDEO_FRAME_SIZE
-
-    while(True):
+    video_numbers = set(map(lambda x: int(x / VIDEO_FRAME_SIZE), frame_numbers))
+    for video_number in tqdm.tqdm(video_numbers):
+        start_frame = video_number * VIDEO_FRAME_SIZE
         in_video = osp.join(VIDEO_DIR, \
                 TEMPLATE_VIDEO.format(start_frame, start_frame + VIDEO_FRAME_SIZE - 1))
-        reader = cv2.VideoCapture(in_video)
-        for i_frame in range(start_frame, start_frame + VIDEO_FRAME_SIZE):
+        reader = cv2.VideoCapture()
+        reader.open(in_video)
+        for i_frame in tqdm.tqdm(range(start_frame, start_frame + VIDEO_FRAME_SIZE)):
             ret, frame = reader.read()
             if not ret:
                 break
             if i_frame in frame_numbers:
-                cv2.imwrite(osp.join(out_folder, out_template.format(i_frame)), frame)
-                frame_numbers.remove(i_frame)
+                cv2.imwrite(osp.join(dir_to_save, TEMPLATE_FRAME.format(i_frame)), frame)
         reader.release()
-        if len(frame_numbers) == 0:
-            break
-        start_frame = int(min(frame_numbers) / VIDEO_FRAME_SIZE) * VIDEO_FRAME_SIZE
 
 def save_markup(frame_numbers, path_to_save):
     marking = BaseMarkingCreator()
@@ -39,7 +40,7 @@ def save_markup(frame_numbers, path_to_save):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Prepare data for marking')
-    parser.add_argument('frameNumbers', required=True, type=int, nargs='+', help='frame numbers')
+    parser.add_argument('frameNumbers', type=int, nargs='+', help='frame numbers')
     parser.add_argument('--framePath', type=str, nargs='?', help='dir to save frames')
     parser.add_argument('--markPath', type=str, nargs='?', help='path to save marking') 
     args = parser.parse_args()
@@ -48,7 +49,7 @@ if __name__ == '__main__':
     if args.framePath:
         save_frames(frameNumbers, args.framePath)
     if args.markPath:
-        save_marking(frameNumbers, args.markPath)
+        save_markup(frameNumbers, args.markPath)
 
     """ 
     numb_start = args.first

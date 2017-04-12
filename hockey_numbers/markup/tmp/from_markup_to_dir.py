@@ -34,7 +34,7 @@ outdir = args.outdir
 if not os.path.exists(outdir):
     os.mkdir(outdir)
 
-for n in range(1, 99):
+for n in range(1, 100):
     dirname = '{}'.format(n)
     dirname = os.path.join(outdir, dirname)
     if not os.path.exists(dirname):
