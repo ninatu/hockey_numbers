@@ -77,11 +77,11 @@ def filterBlobsBySize(blobs, minHeight=BLOB_MIN_HEIGHT,
 def filterBlobsByField(blobs, minHeight=FIELD_Y,
                        maxHeight=FIELD_H,
                        minWidth=FIELD_X,
-                       manWidth=FIELD_W):
+                       maxWidth=FIELD_W):
     goodBlobs = []
     for blob in blobs:
         if minHeight <= blob.y and blob.y  + blob.height <= maxHeight and \
-            minWidth <= blob.x and blob.x + blob.width <= manWidth:
+            minWidth <= blob.x and blob.x + blob.width <= maxWidth:
 
             goodBlobs.append(blob)
     return goodBlobs

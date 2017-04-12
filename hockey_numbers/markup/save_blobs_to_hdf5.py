@@ -9,6 +9,7 @@ import tqdm
 from hockey_numbers.markup.utils.load import load_frame, load_mask
 from hockey_numbers.markup.utils.blob import getBlobsFromMasks, filterBlobsBySize, filterBlobsByField
 from hockey_numbers.markup.utils.image_process import cropByRect, md5_hash
+from hockey_numbers.markup.constants import TEMPLATE_IMAGE
 
 
 def save_blobs_to_hdf5(frame_numbers, outfile, filtered=True):
@@ -17,6 +18,7 @@ def save_blobs_to_hdf5(frame_numbers, outfile, filtered=True):
     out_db = h5py.File(outfile, 'w')
     out_db.create_group('/image')
     out_db.create_group('/mask')
+    yet_saved = set()
 
     for numb in tqdm.tqdm(frame_numbers):
         frame = load_frame(numb)
@@ -32,7 +34,10 @@ def save_blobs_to_hdf5(frame_numbers, outfile, filtered=True):
             img = cropByRect(frame, x, y, w, h)
             img_mask = cropByRect(mask, x, y, w, h)
 
-            img_name = md5_hash(img)
+            img_name = TEMPLATE_IMAGE.format(md5_hash(img))
+            if img_name in yet_saved:
+                continue
+
             img_dset = out_db['image'].create_dataset(img_name, img.shape, '|u1', img)
             img_dset.attrs['frame_number'] = numb
             img_dset.attrs['x'] = x
@@ -40,6 +45,7 @@ def save_blobs_to_hdf5(frame_numbers, outfile, filtered=True):
             img_dset.attrs['w'] = w
             img_dset.attrs['h'] = h
             out_db['mask'].create_dataset(img_name, img_mask.shape, '|u1', img_mask)
+            yet_saved.add(img_name)
 
 def main():
     """Parse args and run function"""
