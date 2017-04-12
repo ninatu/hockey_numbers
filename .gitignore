@@ -1,7 +1,5 @@
 #data files
 
-data
-
 #temporary files
 
 *~
@@ -12,3 +10,6 @@ data
 __pycache__
 .ipynb_checkpoints
 
+
+dist
+hockey_numbers.egg-info/
