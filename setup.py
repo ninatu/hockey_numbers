@@ -17,3 +17,5 @@ setup(
     #install_requires=['opencv3.1.0, scipy, tqdm, h5py, pillow, sklearn'],
     entry_points={'console_scripts': ['save_blobs_to_hdf5 = hockey_numbers.markup.save_blobs_to_hdf5:main',
                                       'save_frames_to_dir = hockey_numbers.markup.save_frames_to_dir:main']})
+                                      #'remove_not_players = hockey_numbers.markup.remove_not_players:mains'
+
