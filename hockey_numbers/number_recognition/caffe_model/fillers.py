@@ -47,6 +47,7 @@ class MSRAFiller(WeightFiller):
 
 
 class ConstantFiller(WeightFiller):
-    def __init__(self):
+    def __init__(self, value=0):
         super(ConstantFiller, self).__init__()
         self._filler.type = 'constant'
+        self._filler.value = value

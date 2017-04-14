@@ -6,7 +6,7 @@ from caffe_model.layers import CaffeProtoLayer
 import datetime
 
 class CaffeNetworkModel(object):
-    def __init__(self, prototxt_path=None, name=None)
+    def __init__(self, prototxt_path=None, name=None):
         self._layers = []
         self._layers_phases = dict()
 
@@ -17,24 +17,25 @@ class CaffeNetworkModel(object):
         if prototxt_path is not None:
             self._layers = parse_model_prototxt(prototxt_path)
 
-    def add_layer(self, layer, top_list=[], bottom_list=[]):
-        if len(top_list):
-            layer.params.top.extend(top_list)
-        if len(bottom_list):
-            layer.params.bottom
+    def add_layer(self, layer):
+        self._layers.append(layer)
 
-            top_layer = self.find_layer(top_layer)
-            assert top_layer is None
+    def merge(self, model):
+        for layer in model._layers:
+            self._layers.append(layer)
 
+    def get_net_params(self):
+        params = caffe_pb2.NetParameter()
 
-
-        self._layers.append(layer
-
-    def find_layer(self, layer_name):
+        proto_layers = []
         for layer in self._layers:
-            if layer.name == layer_name:
-                return layer
-        return None
+            proto_layer = deepcopy(layer.params)
+            proto_layers.append(proto_layer)
+
+        params.layer.extend(proto_layers)
+        params.name = self._name
+
+        return params
 
 
 def parse_model_prototxt(prototxt_path):

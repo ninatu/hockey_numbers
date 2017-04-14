@@ -3,13 +3,13 @@
 
 """Neural network number classification model"""
 
-from caffe_model.model import CaffeNetworkModel
-from caffe_model.data_layers import DataLayer
-from caffe_model.other_layers import InnerProductLayer
-from caffe_model.other_layers import DropoutLayer
-from caffe_model.other_layers import AccuracyLayer
-from caffe_model.other_layers import SoftmaxWithLossLayer
-from caffe_model.other_layers import SoftmaxLayer
+from caffe_model.model2 import CaffeNetworkModel
+from caffe_model.layers import DataLayer
+from caffe_model.layers import InnerProductLayer
+from caffe_model.layers import DropoutLayer
+from caffe_model.layers import AccuracyLayer
+from caffe_model.layers import SoftmaxWithLossLayer
+from caffe_model.layers import SoftmaxLayer
 import os.path as osp
 
 class BaseModel:
@@ -42,36 +42,30 @@ class VGG16(BaseModel):
             """add inner product layer after model
             return name last layer"""
 
-            model.add_layer(InnerProductLayer("n_fc1", num_output=1024, lr_mult=10),
-                            parent_layer="pool5")
-            model.add_layer(DropoutLayer("n_drop1", dropout_ratio=0.5),
-                            parent_layer="n_fc1")
+            model.add_layer(InnerProductLayer('n_fc1', bottom=['pool5'], top=['n_fc1'],
+                                              num_output=1024, lr_mult=10))
+            model.add_layer(DropoutLayer('n_drop1', bottom=['n_fc1'],
+                                         dropout_ratio=0.5))
 
-            return "n_fc1"
+            return 'n_fc1'
 
         def add_train_layers(model, last_layer):
             """add data train/test layer and softmax with loss layers"""
 
-            model.add_layer(DataLayer('train_data', num_slots_out=2),
-                            named_slots_out=[('data', 0), ('labels', 1)],
-                            phase='train')
-            model.add_layer(DataLayer('test_data', num_slots_out=2),
-                            named_slots_out=[('data', 0), ('labels', 1)],
-                            phase='test')
-            """model.add_layer(AccuracyLayer("n_accuracy"),
-                            parent_layer=last_layer)
+            model.add_layer(DataLayer('train_data', top=['data', 'labels']))
+            model.add_layer(DataLayer('test_data', top=['data', 'labels']))
+            model.add_layer(AccuracyLayer("n_accuracy", bottom=['labels', last_layer],
+                                          top=['accuracy']))
 
-            model.add_layer(SoftmaxWithLossLayer("n_loss"),
-                            parent_layer=last_layer)
-            """
+            model.add_layer(SoftmaxWithLossLayer("n_loss", bottom=[last_layer],
+                                                 top=['loss']))
+
 
         def add_deploy_layers(model, last_layer):
             """add data layer and softmax"""
 
-            model.add_layer(DataLayer("deploy_data", num_slots_out=1),
-                            named_slots_out=[('data', 0)])
-            model.add_layer(SoftmaxLayer("n_loss"),
-                            parent_layer=last_layer)
+            model.add_layer(DataLayer("deploy_data", top=['data']))
+            model.add_layer(SoftmaxLayer("n_loss", bottom=[last_layer], top=['loss']))
 
         """creation train/test net"""
         train_model = get_pretrain_model()
@@ -79,12 +73,12 @@ class VGG16(BaseModel):
         add_train_layers(train_model, last_layer)
 
         """creation deploy net"""
-        #deploy_model = get_pretrain_model()
-        #last_layer = add_common_inner_layers(deploy_model)
-        #add_deploy_layers(deploy_model, last_layer)
-        deploy_model = None
+        deploy_model = get_pretrain_model()
+        last_layer = add_common_inner_layers(deploy_model)
+        add_deploy_layers(deploy_model, last_layer)
+
         return train_model.get_net_params(), \
-               None #deploy_model.get_net_params()
+               deploy_model.get_net_params()
 
     """
     def load_model(self):

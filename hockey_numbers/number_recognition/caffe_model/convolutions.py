@@ -15,49 +15,27 @@ from caffe_model.activations import ELU
 from caffe_model.other_layers import DropoutLayer
 
 
-class ConvolutionLayer(BaseLayer):
-    def __init__(self, name, num_filters,
-                 kernel_size, stride=1, pad=0,
-                 weight_filler=GaussianFiller(std=0.01),
-                 lr_mult=1):
-        super(ConvolutionLayer, self).__init__(name, 'Convolution', 1, 1)
-        self._inplace = False
-
-        self._params.convolution_param.num_output = num_filters
-        self._params.convolution_param.kernel_size.extend([kernel_size])
-        self._params.convolution_param.pad.extend([pad])
-        self._params.convolution_param.stride.extend([stride])
-
-        self._params.convolution_param.weight_filler.MergeFrom(weight_filler.to_proto())
-        self._params.convolution_param.bias_filler.MergeFrom(ConstantFiller().to_proto())
-
-        weight_blob_param = caffe_pb2.ParamSpec(lr_mult=1 * lr_mult)
-        bias_blob_param = caffe_pb2.ParamSpec(lr_mult=2 * lr_mult)
-
-        self._params.param.extend([weight_blob_param, bias_blob_param])
-
-    def slots_out_names(self):
-        return ['']
 
 
+"""
 class ConvWithActivation(BaseLayer):
-    def __init__(self, name, num_filters,
+    def __init__(self, name,  bottom, top, num_filters,
                  kernel_size, stride=1, pad=1,
                  weight_filler=GaussianFiller(std=0.01),
                  lr_mult=1, activation='relu',
                  activation_params=None,
                  dropout=0.0):
 
-        conv_layer = ConvolutionLayer(name, num_filters, kernel_size,
+        conv_layer = ConvolutionLayer(name,  bottom, top, num_filters, kernel_size,
                                       stride, pad, weight_filler, lr_mult)
 
         if activation_params is None:
             activation_params = dict()
 
         if activation == 'relu':
-            act_layer = ReLU(name + '_relu', **activation_params)
+            act_layer = ReLU(name + '_relu', top, **activation_params)
         elif activation == 'elu':
-            act_layer = ELU(name + '_elu', **activation_params)
+            act_layer = ELU(name + '_elu', top,**activation_params)
         else:
             raise ValueError("Unknown activation function '%s'" % activation)
 
@@ -82,3 +60,4 @@ class ConvWithActivation(BaseLayer):
     @property
     def params(self):
         raise NotImplementedError()
+"""
