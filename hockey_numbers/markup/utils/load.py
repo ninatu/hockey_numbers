@@ -5,9 +5,8 @@
 
 import scipy.misc
 import os.path as osp
-import numpy as np
 
-from hockey_numbers.markup.constants import FRAME_DIR, TEMPLATE_FRAME, MASK_DIR, TEMPLATE_MASK, TEMPLATE_IMAGE
+from hockey_numbers.markup.constants import FRAME_DIR, TEMPLATE_FRAME, MASK_DIR, TEMPLATE_MASK
 
 
 def load_frame(numb):

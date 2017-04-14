@@ -26,7 +26,7 @@ def save_frames_to_dir(frame_numbers, dir_to_save):
                 TEMPLATE_VIDEO.format(start_frame, start_frame + VIDEO_FRAME_SIZE - 1))
         reader = cv2.VideoCapture()
         reader.open(in_video)
-        for i_frame in tqdm.tqdm(range(start_frame, start_frame + VIDEO_FRAME_SIZE)):
+        for i_frame in range(start_frame, start_frame + VIDEO_FRAME_SIZE):
             ret, frame = reader.read()
             if not ret:
                 break
