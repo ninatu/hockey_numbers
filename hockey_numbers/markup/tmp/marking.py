@@ -1,9 +1,11 @@
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-import cv2
+
+import os.path as osp
 import json
 import re
-import numpy as np
-import sys
+import cv2
+from hockey_numbers.markup.constants import MASK_DIR, TEMPLATE_IMAGE, TEMPLATE_MASK
 from .blob import filterBlobsBySize, filterBlobsByField, getBlobsFromMasks, getNearestBlob
 
 class Marking:
@@ -131,24 +133,24 @@ class MarkingApproximator:
 
 
 class BaseMarkingCreator:
-    def __init__(self, masksDir, templateMasks, templateImages):
-        # self.imagesDir = imagesDir
+    def __init__(self, masksDir=MASK_DIR, \
+                       templateMasks = TEMPLATE_MASK, \
+                       templateImages = TEMPLATE_IMAGE):
         self.masksDir = masksDir
         self.templateImages = templateImages
         self.templateMasks = templateMasks
         self.blobs = {}
 
-    def addFrames(self, numbStart, numbEnd, step=1):
-        for numb in range(numbStart, numbEnd, step):
-            nameMask = self.masksDir + self.templateMasks.format(numb)
+    def addFrames(self, frameNumbers):
+        for numb in frameNumbers:
+            nameMask = osp.join(self.masksDir, self.templateMasks.format(numb))
             nameImage = self.templateImages.format(numb)
             mask = cv2.imread(nameMask)
             if mask is not None:
                 mask = mask[:, :, 0]
                 self.blobs[nameImage] = getBlobsFromMasks(mask)
-
-    def filterByField(self, pathToField):
-        pass
+            else:
+                sys.stderr.write('Mask № {:d} by path {:s} not found!\n'.format(numb, nameMask))
 
     def clear(self):
         self.blobs = {}
@@ -160,6 +162,9 @@ class BaseMarkingCreator:
     def filterByField(self, minHeight, maxHeight, minWidth, manWidth):
         for image in self.blobs.keys():
             self.blobs[image] = filterBlobsByField(self.blobs[image], minHeight, maxHeight, minWidth, manWidth)
+    
+    def getBlobs(self):
+        return self.blobs.copy()
 
     def saveAsJson(self, outFile):
         dictBlobs = {}
@@ -170,7 +175,7 @@ class BaseMarkingCreator:
                                               'h': float(blob.height), 'w': float(blob.width)}})
             if len(objects) != 0:
                 dictBlobs[image] = {"objects": objects}
-        json.dump(dictBlobs, outFile, sort_keys = True, indent = 4)
+        json.dump(dictBlobs, outFile, sort_keys = True)
 
 class MarkingStatictics:
     def __init__(self):
@@ -216,31 +221,3 @@ class MarkingStatictics:
     def getMarkingCounts(self):
         return self.dictMarking.copy()
 
-    """
-    def getNumberStatistic(self):
-        all_numbs = []
-        for path, value in self.dictMarking.items():
-            all_numbs.extend(value["numbers"])
-            unique, counts = np.unique(np.array(all_numbs), return_counts=True)
-
-
-
-    def saveNumbersBins(self, outName):
-        all_numbs = []
-        for path, value in self.dictMarking.items():
-            all_numbs.extend(value["numbers"])
-            unique, counts = np.unique(np.array(all_numbs), return_counts=True)
-    """
-
-
-
-if __name__ == '__main__':
-    markingPath = '/home/nina/Documents/hockey_tracking/number_recognition/results/part2400_2600/marking.json'
-    marking = Marking()
-    marking.FromJson(open(markingPath))
-    masksDir = '/media/nina/Seagate Backup Plus Drive/hockey/masks/'
-    templateImages = 'cska_akbars_{:d}.jpg'
-    templateMasks = 'mask{:d}.png'
-    outPath = '/home/nina/Documents/hockey_tracking/number_recognition/results/part2400_2600/marking_approximate.json'
-    marking.approximBetweenImages(masksDir, templateMasks, templateImages)
-    marking.saveJson(open(outPath, 'w'))

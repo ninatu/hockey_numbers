@@ -1,5 +1,13 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+"""Work with blobs on images"""
+
 import cv2
 import numpy as np
+
+from hockey_numbers.markup.constants import BLOB_MIN_HEIGHT, BLOB_MAX_HEIGHT, BLOB_MIN_WIDTH, BLOB_MAX_WIDTH
+from hockey_numbers.markup.constants import FIELD_Y, FIELD_H, FIELD_X, FIELD_W
 
 class Blob(object):
     def __init__(self, x, y, width, height, area, centroid, mask=None):
@@ -55,7 +63,10 @@ def getNearestBlob(blob, listBlobs, minIOU=0.2):
         return -1
 
 
-def filterBlobsBySize(blobs, minHeight=70,  maxHeight=190, minWidth=40, manWidth=120):
+def filterBlobsBySize(blobs, minHeight=BLOB_MIN_HEIGHT,
+                      maxHeight=BLOB_MAX_HEIGHT,
+                      minWidth= BLOB_MIN_WIDTH,
+                      manWidth=BLOB_MAX_WIDTH):
     goodBlobs = []
     for blob in blobs:
         if minHeight <= blob.height <= maxHeight and \
@@ -63,11 +74,14 @@ def filterBlobsBySize(blobs, minHeight=70,  maxHeight=190, minWidth=40, manWidth
             goodBlobs.append(blob)
     return goodBlobs
 
-def filterBlobsByField(blobs, minHeight=0,  maxHeight=820, minWidth=0, manWidth=5700):
+def filterBlobsByField(blobs, minHeight=FIELD_Y,
+                       maxHeight=FIELD_H,
+                       minWidth=FIELD_X,
+                       maxWidth=FIELD_W):
     goodBlobs = []
     for blob in blobs:
         if minHeight <= blob.y and blob.y  + blob.height <= maxHeight and \
-            minWidth <= blob.x and blob.x + blob.width <= manWidth:
+            minWidth <= blob.x and blob.x + blob.width <= maxWidth:
 
             goodBlobs.append(blob)
     return goodBlobs
@@ -80,12 +94,3 @@ def getBlobsFromMasks(mask, saveMasks=False):
     else:
         blobs = [Blob.create_from_stats(stats[i, :], centroids[i, :]) for i in range(stats.shape[0])]
     return blobs
-
-if __name__ == '__main__':
-    nameMask = '/media/nina/Seagate Backup Plus Drive/hockey/masks/mask2400.png'
-    imageMask = cv2.imread(nameMask)[:, :, 0]
-    blobs = getBlobsFromMasks(imageMask)
-    blobs = filterBlobsBySize(blobs)
-
-
-
