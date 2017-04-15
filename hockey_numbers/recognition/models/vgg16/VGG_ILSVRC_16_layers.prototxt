@@ -1,5 +1,5 @@
 layer {
-
+  bottom: "data"
   top: "conv1_1"
   name: "conv1_1"
   type: "Convolution"

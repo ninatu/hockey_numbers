@@ -45,7 +45,11 @@ class CaffeAbstractLayer(metaclass=ABCMeta):
         pass
 
 
+
 class BaseLayer(CaffeAbstractLayer):
+
+    PHASE = {"train": caffe_pb2.TRAIN, "test": caffe_pb2.TEST}
+
     def __init__(self, name, layer_type,
                  bottom, top, phase=None):
         self._params = caffe_pb2.LayerParameter()
@@ -54,7 +58,9 @@ class BaseLayer(CaffeAbstractLayer):
         self._params.top.extend(top)
         self._params.bottom.extend(bottom)
         if phase:
-            self._params.i
+            rule = caffe_pb2.NetStateRule()
+            rule.phase = BaseLayer.PHASE[phase]
+            self._params.include.extend([rule])
 
     @property
     def params(self):
@@ -90,21 +96,21 @@ class CaffeProtoLayer(BaseLayer):
         self._params = params
 
 
-
-DB = {"LEVELDB" : caffe_pb2.DataParameter.LEVELDB,
-      "LMDB" : caffe_pb2.DataParameter.LMDB}
-
 class DataLayer(BaseLayer):
-    def __init__(self, name, top, source="",
-                 batch_size="", backend = "LMDB",
+
+    DB = {"LEVELDB": caffe_pb2.DataParameter.LEVELDB,
+          "LMDB": caffe_pb2.DataParameter.LMDB}
+
+    def __init__(self, name, top, phase=None, source="",
+                 batch_size=16, backend = "LMDB",
                  num_slots_out=2, scale=1,
                  mirror=False, crop_size=0,
                  mean_file=None, mean_value=None):
 
-        super(DataLayer, self).__init__(name, 'Data', [], top)
+        super(DataLayer, self).__init__(name, 'Data', [], top, phase=phase)
         #self._params.data_param.source = source
         #self._params.data_param.batch_size = batch_size
-        self._params.data_param.backend = DB[backend]
+        self._params.data_param.backend = DataLayer.DB[backend]
 
         if mean_file:
             self.params.transform_param.mean_file = mean_file
@@ -167,8 +173,8 @@ class InnerProductLayer(BaseLayer):
 
 
 class AccuracyLayer(BaseLayer):
-    def __init__(self, name, bottom, top):
-        super(AccuracyLayer, self).__init__(name, "Accuracy", bottom, top)
+    def __init__(self, name, bottom, top, phase=None):
+        super(AccuracyLayer, self).__init__(name, "Accuracy", bottom, top, phase=phase)
 
 
 class DropoutLayer(BaseLayer):
