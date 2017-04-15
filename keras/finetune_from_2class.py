@@ -26,7 +26,7 @@ batch_size = 256
 nb_outputs = 100
 nb_epoch_step1 = 100
 nb_epoch_step2 = 100
-nb_epoch_images = 20000
+nb_epoch_images = 40000
 nb_epoch_images_test = int(nb_epoch_images * 0.1)
 
 # input image dimensions
@@ -62,13 +62,15 @@ train_generator = datagen.flow_from_directory(
         'images/data/train_large',
         target_size=(img_rows, img_cols),
         batch_size=batch_size,
-        class_mode="categorical")
+        class_mode="categorical",
+	shuffle=True)
 
 test_generator = datagen.flow_from_directory(
         'images/data/test',
         target_size=(img_rows, img_cols),
         batch_size=batch_size,
-        class_mode="categorical")
+        class_mode="categorical", 
+	shuffle=True)
 
 # step1
 for layer in base_model.layers:
@@ -94,7 +96,7 @@ model.save("model/model_ft_100class_21.h5" )
 for layer in base_model.layers:
     layer.trainable = True
 
-sgd = optimizers.SGD(lr=0.001, decay=1e-6, momentum=0.9, nesterov=True)
+sgd = optimizers.SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=True)
 model.compile(loss='categorical_crossentropy' if nb_outputs > 1 else 'mse',
               optimizer=sgd,
               metrics=['accuracy'])
