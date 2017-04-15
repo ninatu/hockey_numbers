@@ -53,7 +53,7 @@ class SolverProto:
             pass
         else:
             raise NotImplementedError(params['lr_policy'])
-
+	self._params.max_iter = params['max_iter']
         self._params.momentum = params['momentum']
         self._params.weight_decay = params['weight_decay']
         self._params.display = params['display']

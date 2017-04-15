@@ -4,8 +4,8 @@ import caffe
 import h5py
 import os.path as osp
 import scipy.misc
+import skimage
 import os
-import cv2
 import argparse
 import tqdm
 import sys
@@ -19,12 +19,12 @@ def writeToLMDB(env, readers, start_i, h, w, convertToGray=False):
             datum = caffe.proto.caffe_pb2.Datum()
             datum.height = h
             datum.width = w
-            img = cv2.resize(img, (w, h))
+            img = scipy.misc.imresize(img, (h, w))
             img = img.astype(np.uint8)
 
             if convertToGray:
                 datum.channels = 1
-                img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+                img = skimage.color.rgb2gray(img, cv2.COLOR_BGR2GRAY)
                 img = img.reshape((1, h, w))
             else:
                 datum.channels = 3
@@ -73,8 +73,7 @@ class DirReader:
         subdirs = os.listdir(self._path)
         subdirs = filter(lambda x: osp.isdir(osp.join(self._path, x)), subdirs)
 
-        for subdir in subdirs:
-            sys.stdout.write(subdir + ': ')
+        for subdir in tqdm.tqdm(subdirs):
             number = int(subdir)
 
             subdir = osp.join(self._path, subdir)

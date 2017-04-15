@@ -14,7 +14,8 @@ from caffe.proto import caffe_pb2
 import json
 
 
-class CaffeAbstractLayer(metaclass=ABCMeta):
+class CaffeAbstractLayer():#metaclass=ABCMeta):
+    __metaclass__ = ABCMeta
     @property
     @abstractmethod
     def name(self):
@@ -109,7 +110,7 @@ class DataLayer(BaseLayer):
 
         super(DataLayer, self).__init__(name, 'Data', [], top, phase=phase)
         #self._params.data_param.source = source
-        #self._params.data_param.batch_size = batch_size
+        self._params.data_param.batch_size = batch_size
         self._params.data_param.backend = DataLayer.DB[backend]
 
         if mean_file:
