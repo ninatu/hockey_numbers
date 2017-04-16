@@ -14,6 +14,7 @@ from caffe_model.layers import SoftmaxLayer
 from caffe_model.solver import SolverProto
 from caffe_model.solver import Solver
 import caffe
+from caffe.proto import caffe_pb2
 import os
 import os.path as osp
 from copy import deepcopy
@@ -82,14 +83,14 @@ class VGG16(BaseModel):
         """creation train/test net"""
 
         train_model = CaffeNetworkModel()
-        train_model.add_layer(DataLayer('train_data', top=['data', 'label'], phase='train', batch_size=64))
-        train_model.add_layer(DataLayer('test_data', top=['data', 'label'], phase='test', batch_size=64))
+        train_model.add_layer(DataLayer('data', top=['data', 'label'], phase='train', batch_size=64))
+        train_model.add_layer(DataLayer('data', top=['data', 'label'], phase='test', batch_size=64))
 
         train_model.merge(get_pretrain_model())
 
         last_layer = add_common_inner_layers(train_model)
 
-        train_model.add_layer(AccuracyLayer("n_accuracy", bottom=['label', last_layer],
+        train_model.add_layer(AccuracyLayer("n_accuracy", bottom=[last_layer, 'label'],
                                       top=['accuracy'], phase='test'))
         train_model.add_layer(SoftmaxWithLossLayer("n_loss", bottom=[last_layer, 'label'],
                                              top=['loss']))
@@ -141,10 +142,11 @@ class VGG16(BaseModel):
         layer_train_data = None
         layer_test_data = None
         for layer in layers:
-            if layer.name == 'train_data':
-                layer_train_data = layer
-            if layer.name == 'test_data':
-                layer_test_data = layer
+            if layer.name == 'data':
+                if layer.include[0].phase == caffe_pb2.TRAIN:
+                    layer_train_data = layer
+                if layer.include[0].phase == caffe_pb2.TEST:
+                    layer_test_data = layer
         assert layer_train_data is not None
         assert layer_test_data is not None
     
@@ -188,13 +190,13 @@ class VGG16(BaseModel):
             os.mkdir(snapshot_path)
 
         solver_params = {
-            'base_lr': 0.001,
+            'base_lr': 0.0001,
             'lr_policy': 'step',
             'gamma': 0.1,
             'stepsize': 5000,
             'display': 50,
-            'max_iter': 60,#120000,
-            'test_iter': 4,
+            'max_iter': 120000,
+            'test_iter': 3,
             'test_interval': 200,
             'momentum': 0.9,
             'weight_decay': 0.0005,

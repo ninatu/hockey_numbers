@@ -5,5 +5,5 @@ from models import VGG16
 from models import ClassificationType
 caffe.set_device(1)
 caffe.set_mode_gpu()
-model = VGG16(type=ClassificationType.NUMBERS)
-model.train("/home/GRAPHICS2/19n_tul/data/lmdb/classes/train_big", "/home/GRAPHICS2/19n_tul/data/lmdb/classes/train_big")
+model = VGG16(type=ClassificationType.BINARY)
+model.train("/home/GRAPHICS2/19n_tul/data/lmdb/number_not_number/train", "/home/GRAPHICS2/19n_tul/data/lmdb/number_not_number/test")
