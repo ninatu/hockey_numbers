@@ -21,7 +21,7 @@ class ClassificationType(Enum):
     NUMBERS = 'numbers'
     BINARY = 'binary'
 
-class BaseModel:
+class BaseModel(object):
 
     def __init__(self, type):
         self._type = type
@@ -79,8 +79,8 @@ class VGG16(BaseModel):
         """creation train/test net"""
 
         train_model = CaffeNetworkModel()
-        train_model.add_layer(DataLayer('train_data', top=['data', 'label'], phase='train'))
-        train_model.add_layer(DataLayer('test_data', top=['data', 'label'], phase='test'))
+        train_model.add_layer(DataLayer('train_data', top=['data', 'label'], phase='train', batch_size=16))
+        train_model.add_layer(DataLayer('test_data', top=['data', 'label'], phase='test', batch_size=16))
 
         train_model.merge(get_pretrain_model())
 
@@ -88,7 +88,7 @@ class VGG16(BaseModel):
 
         train_model.add_layer(AccuracyLayer("n_accuracy", bottom=['label', last_layer],
                                       top=['accuracy'], phase='test'))
-        train_model.add_layer(SoftmaxWithLossLayer("n_loss", bottom=[last_layer],
+        train_model.add_layer(SoftmaxWithLossLayer("n_loss", bottom=[last_layer, 'label'],
                                              top=['loss']))
 
         """creation deploy net"""
@@ -148,7 +148,7 @@ class VGG16(BaseModel):
 
         layer_train_data.data_param.source = train_dset
         layer_test_data.data_param.source = valid_dset
-        net_param.input_dim.extend([16, 3, 40, 40])
+        #net_param.input_dim.extend([16, 3, 40, 40])
         return net_param
 
     """
@@ -179,8 +179,10 @@ class VGG16(BaseModel):
             'lr_policy': 'step',
             'gamma': 0.1,
             'stepsize': 100000,
-            'display': 20,
-            'max_iter': 450000,
+            'display': 1000,
+            'max_iter': 100000,
+            #'test_iter': 1000,
+            #'test_interval': 200
             'momentum': 0.9,
             'weight_decay': 0.0005,
             'snapshot': 10000,
