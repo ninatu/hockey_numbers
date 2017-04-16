@@ -81,11 +81,12 @@ class DirReader:
             imgfiles = map(lambda x: osp.join(subdir, x), imgfiles)
             imgfiles = filter(lambda x: osp.isfile(x), imgfiles)
 
-
-            for imgfile in tqdm.tqdm(imgfiles):
+	    for imgfile in imgfiles:
+	        if not osp.isfile(imgfile):
+	            continue
                 img = scipy.misc.imread(imgfile)
                 yield (img, number)
-
+		
 
 def prepare(synthtext, dirs, outfile, h, w, append=False, to_gray=False):
     assert not osp.exists(outfile) and append == False
