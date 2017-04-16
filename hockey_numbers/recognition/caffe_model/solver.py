@@ -11,8 +11,8 @@ class SolverProto:
         'CPU' : caffe_pb2.SolverParameter.CPU
     }
 
-    SOLVER_TYPE  = {
-        'SGD' : caffe_pb2.SolverParameter.SGD,
+    SOLVER_TYPE = {
+        'SGD': caffe_pb2.SolverParameter.SGD,
         'NESTEROV' : caffe_pb2.SolverParameter.NESTEROV,
         'ADAGRAD' : caffe_pb2.SolverParameter.ADAGRAD,
         'RMSPROP' : caffe_pb2.SolverParameter.RMSPROP,
@@ -27,6 +27,8 @@ class SolverProto:
         'stepsize': 100000,
         'display': 20,
         'max_iter': 450000,
+        'test_iter': 4,
+        'test_interval': 200,
         'momentum': 0.9,
         'weight_decay': 0.0005,
         'snapshot': 10000,
@@ -53,10 +55,13 @@ class SolverProto:
             pass
         else:
             raise NotImplementedError(params['lr_policy'])
-	self._params.max_iter = params['max_iter']
+
+	    self._params.max_iter = params['max_iter']
         self._params.momentum = params['momentum']
         self._params.weight_decay = params['weight_decay']
         self._params.display = params['display']
+        self._params.test_iter = params['test_iter']
+        self._params.test_interval = params['test_interval']
         self._params.snapshot = params['snapshot']
         self._params.snapshot_prefix = params['snapshot_prefix']
         self._params.solver_mode = SolverProto.SOLVER_MODE[params['solver_mode']]

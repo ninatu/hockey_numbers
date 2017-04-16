@@ -4,7 +4,7 @@
 """Neural network number classification model"""
 
 from caffe_model.model import CaffeNetworkModel
-from caffe_model.layers import DataLayer
+from caffe_model.layers import ImageDataLayer
 from caffe_model.layers import InnerProductLayer
 from caffe_model.layers import DropoutLayer
 from caffe_model.layers import AccuracyLayer
@@ -79,8 +79,8 @@ class VGG16(BaseModel):
         """creation train/test net"""
 
         train_model = CaffeNetworkModel()
-        train_model.add_layer(DataLayer('train_data', top=['data', 'label'], phase='train', batch_size=16))
-        train_model.add_layer(DataLayer('test_data', top=['data', 'label'], phase='test', batch_size=16))
+        train_model.add_layer(ImageDataLayer('train_data', top=['data', 'label'], phase='train', batch_size=16))
+        train_model.add_layer(ImageDataLayer('test_data', top=['data', 'label'], phase='test', batch_size=16))
 
         train_model.merge(get_pretrain_model())
 
@@ -93,7 +93,7 @@ class VGG16(BaseModel):
 
         """creation deploy net"""
         deploy_model = CaffeNetworkModel()
-        deploy_model.add_layer(DataLayer("deploy_data", top=['data']))
+        deploy_model.add_layer(ImageDataLayer("deploy_data", top=['data']))
 
         deploy_model.merge(get_pretrain_model())
 
@@ -113,7 +113,6 @@ class VGG16(BaseModel):
         model_deploy_file = VGG16.MODEL_FILE.format(self._type, 'deploy')
         model_deploy_file = osp.join('models', VGG16.MODEL_DIR, model_deploy_file)
 
-        train_proto_net, deploy_proto_net = None, None
 
         if True: #not osp.exists(model_train_file):
             train_proto_net, deploy_proto_net = self._create_model()
@@ -148,7 +147,7 @@ class VGG16(BaseModel):
 
         layer_train_data.data_param.source = train_dset
         layer_test_data.data_param.source = valid_dset
-        #net_param.input_dim.extend([16, 3, 40, 40])
+        net_param.input_dim.extend([64, 3, 40, 40])
         return net_param
 
     """
@@ -178,11 +177,11 @@ class VGG16(BaseModel):
             'base_lr': 0.001,
             'lr_policy': 'step',
             'gamma': 0.1,
-            'stepsize': 100000,
-            'display': 1000,
-            'max_iter': 100000,
-            #'test_iter': 1000,
-            #'test_interval': 200
+            'stepsize': 5000,
+            'display': 50,
+            'max_iter': 120000,
+            'test_iter': 4,
+            'test_interval': 200,
             'momentum': 0.9,
             'weight_decay': 0.0005,
             'snapshot': 10000,

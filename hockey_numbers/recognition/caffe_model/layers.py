@@ -97,24 +97,40 @@ class CaffeProtoLayer(BaseLayer):
         self._params = params
 
 
+
 class DataLayer(BaseLayer):
 
     DB = {"LEVELDB": caffe_pb2.DataParameter.LEVELDB,
           "LMDB": caffe_pb2.DataParameter.LMDB}
 
-    def __init__(self, name, top, phase=None, source="",
-                 batch_size=16, backend = "LMDB",
-                 num_slots_out=2, scale=1,
+    def __init__(self, name, top, phase=None,
+                 backend = "LMDB", scale=1,
                  mirror=False, crop_size=0,
                  mean_file=None, mean_value=None):
 
         super(DataLayer, self).__init__(name, 'Data', [], top, phase=phase)
-        #self._params.data_param.source = source
-        self._params.data_param.batch_size = batch_size
+
         self._params.data_param.backend = DataLayer.DB[backend]
 
-        if mean_file:
-            self.params.transform_param.mean_file = mean_file
+        #if mean_file:
+        #    self.params.transform_param.mean_file = mean_file
+
+class ImageDataLayer(BaseLayer):
+
+    DB = {"LEVELDB": caffe_pb2.DataParameter.LEVELDB,
+          "LMDB": caffe_pb2.DataParameter.LMDB}
+
+    def __init__(self, name, top, phase=None,
+                 backend="LMDB", shuffle=True,
+                 scale=1, mirror=False, crop_size=0,
+                 mean_file=None):
+
+        super(DataLayer, self).__init__(name, 'ImageData', [], top, phase=phase)
+        self._params.image_data_param.backend = DataLayer.DB[backend]
+        self._params.image_data_param.shuffle = shuffle
+
+        #if mean_file:
+        #    self.params.transform_param.mean_file = mean_file
 
 
 class ConvolutionLayer(BaseLayer):
