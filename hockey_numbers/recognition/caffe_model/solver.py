@@ -2,6 +2,7 @@ from caffe.proto import caffe_pb2
 import caffe
 from tempfile import mkstemp
 import os
+import datetime
 
 
 class SolverProto:
@@ -82,20 +83,29 @@ class SolverProto:
         os.close(self._solver_file[0])
         os.remove(self._solver_file[1])
 
+    def save_params(self, out_dir):
+        name = "solver_" + datetime.datetime.now().strftime("%d_%m_%Y_%H_%M") + ".prototxt"
+        name = os.path.join(out_dir, name)
+        with open(name, 'w') as f:
+            f.write(str(self._params))
+
 
 class Solver:
 
-    def __init__(self, solverproto):
+    def __init__(self, net_params, params):
 
-        self._solverproto = solverproto
+        self._solver_proto = SolverProto(net_params, params)
 
     def solve(self, pretrained_path=None):
 
-        self._solver = caffe.get_solver(self._solverproto.get_path())
+        self._solver = caffe.get_solver(self._solver_proto.get_path())
         if pretrained_path:
             self._solver.net.copy_from(pretrained_path)
         self._solver.solve()
 
-    def get_net(self):
-        return self._solver.net
+    def save_weights(self, path):
+        self._solver.net.save(path)
+
+    def save_params(self, out_dir):
+        self._solver_proto.save_params(out_dir)
 

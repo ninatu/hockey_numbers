@@ -8,7 +8,6 @@ import skimage
 import os
 import argparse
 import tqdm
-import sys
 import random
 
 
@@ -25,7 +24,7 @@ def writeToLMDB(env, readers, start_i, h, w, convertToGray=False):
 
             if convertToGray:
                 datum.channels = 1
-                img = skimage.color.rgb2gray(img, cv2.COLOR_BGR2GRAY)
+                img = skimage.color.rgb2gray(img)
                 img = img.reshape((1, h, w))
             else:
                 datum.channels = 3
@@ -73,7 +72,8 @@ class DirReader:
 
         subdirs = os.listdir(self._path)
         subdirs = filter(lambda x: osp.isdir(osp.join(self._path, x)), subdirs)
-	all_imgfiles = []
+        all_imgfiles = []
+
         for subdir in subdirs:
             number = int(subdir)
 
@@ -81,10 +81,11 @@ class DirReader:
             imgfiles = os.listdir(subdir)
             imgfiles = map(lambda x: osp.join(subdir, x), imgfiles)
             imgfiles = filter(lambda x: osp.isfile(x), imgfiles)
-	    imgfiles = map(lambda x: (number, x), imgfiles)
-	    all_imgfiles.extend(imgfiles)
 
-	random.shuffle(all_imgfiles)
+            imgfiles = map(lambda x: (number, x), imgfiles)
+            all_imgfiles.extend(imgfiles)
+
+        random.shuffle(all_imgfiles)
         for number, imgfile in tqdm.tqdm(all_imgfiles):
             if not osp.isfile(imgfile):
                 continue
@@ -93,7 +94,8 @@ class DirReader:
 		
 
 def prepare(synthtext, dirs, outfile, h, w, append=False, to_gray=False):
-    assert not osp.exists(outfile) and append == False
+    if osp.exists(outfile) and append == False:
+        os.rmdir(outfile)
 
     readers = [SynthTextImageReader(infile) for infile in synthtext]
     readers.extend([DirReader(indir) for indir in dirs])

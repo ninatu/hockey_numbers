@@ -103,8 +103,8 @@ class DataLayer(BaseLayer):
     DB = {"LEVELDB": caffe_pb2.DataParameter.LEVELDB,
           "LMDB": caffe_pb2.DataParameter.LMDB}
 
-    def __init__(self, name, top, batch_size, phase=None,
-                 backend = "LMDB", scale=1,
+    def __init__(self, name, top, batch_size, source,
+                 phase=None, backend = "LMDB", scale=1,
                  mirror=False, crop_size=0,
                  mean_file=None, mean_value=None):
 
@@ -112,6 +112,7 @@ class DataLayer(BaseLayer):
 
         self._params.data_param.backend = DataLayer.DB[backend]
         self._params.data_param.batch_size = batch_size
+        self._params.data_param.source = source
         #if mean_file:
         #    self.params.transform_param.mean_file = mean_file
     def add_source(self, path):
@@ -122,7 +123,7 @@ class ImageDataLayer(BaseLayer):
     DB = {"LEVELDB": caffe_pb2.DataParameter.LEVELDB,
           "LMDB": caffe_pb2.DataParameter.LMDB}
 
-    def __init__(self, name, top, batch_size, phase=None,
+    def __init__(self, name, top, batch_size, source, phase=None,
                  backend="LMDB", shuffle=True,
                  scale=1, mirror=False, crop_size=0,
                  mean_file=None):
@@ -131,6 +132,7 @@ class ImageDataLayer(BaseLayer):
         self._params.data_param.backend = ImageDataLayer.DB[backend]
         self._params.image_data_param.batch_size = batch_size
         self._params.image_data_param.shuffle = shuffle
+        self._params.image_data_param.source = source
 
         #if mean_file:
         #    self.params.transform_param.mean_file = mean_file
@@ -210,7 +212,6 @@ class ReshapeLayer(BaseLayer):
         super(ReshapeLayer, self).__init__(name, "Reshape", bottom, bottom)
 
         self._params.reshape_param.shape.dim.extend(reshape_dim)
-
 
 
 class SoftmaxLayer(BaseLayer):

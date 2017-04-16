@@ -17,6 +17,12 @@ class CaffeNetworkModel(object):
         if prototxt_path is not None:
             self._layers = parse_model_prototxt(prototxt_path)
 
+        self._input_dim = []
+
+    @property
+    def name(self):
+        return self._name
+
     def add_layer(self, layer):
         self._layers.append(layer)
 
@@ -34,8 +40,12 @@ class CaffeNetworkModel(object):
 
         params.layer.extend(proto_layers)
         params.name = self._name
+        params.input_dim.extend(self._input_dim)
 
         return params
+
+    def add_input_dim(self, input_dim):
+        self._input_dim = input_dim
 
 
 def parse_model_prototxt(prototxt_path):
