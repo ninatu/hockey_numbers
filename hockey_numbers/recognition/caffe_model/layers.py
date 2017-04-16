@@ -103,7 +103,7 @@ class DataLayer(BaseLayer):
     DB = {"LEVELDB": caffe_pb2.DataParameter.LEVELDB,
           "LMDB": caffe_pb2.DataParameter.LMDB}
 
-    def __init__(self, name, top, phase=None,
+    def __init__(self, name, top, batch_size, phase=None,
                  backend = "LMDB", scale=1,
                  mirror=False, crop_size=0,
                  mean_file=None, mean_value=None):
@@ -111,27 +111,31 @@ class DataLayer(BaseLayer):
         super(DataLayer, self).__init__(name, 'Data', [], top, phase=phase)
 
         self._params.data_param.backend = DataLayer.DB[backend]
-
+	self._params.data_param.batch_size = batch_size
         #if mean_file:
         #    self.params.transform_param.mean_file = mean_file
+    def add_source(self, path):
+	self._params.data_param.source = path
 
 class ImageDataLayer(BaseLayer):
 
     DB = {"LEVELDB": caffe_pb2.DataParameter.LEVELDB,
           "LMDB": caffe_pb2.DataParameter.LMDB}
 
-    def __init__(self, name, top, phase=None,
+    def __init__(self, name, top, batch_size, phase=None,
                  backend="LMDB", shuffle=True,
                  scale=1, mirror=False, crop_size=0,
                  mean_file=None):
 
-        super(DataLayer, self).__init__(name, 'ImageData', [], top, phase=phase)
-        self._params.image_data_param.backend = DataLayer.DB[backend]
+        super(ImageDataLayer, self).__init__(name, 'ImageData', [], top, phase=phase)
+        self._params.data_param.backend = ImageDataLayer.DB[backend]
+	self._params.image_data_param.batch_size = batch_size
         self._params.image_data_param.shuffle = shuffle
 
         #if mean_file:
         #    self.params.transform_param.mean_file = mean_file
-
+    def add_source(self, path):
+	self._params.image_data_param.source = path
 
 class ConvolutionLayer(BaseLayer):
     def __init__(self, name, bottom, top,
@@ -215,11 +219,10 @@ class SoftmaxLayer(BaseLayer):
 
 
 class SoftmaxWithLossLayer(BaseLayer):
-    def __init__(self, name, bottom, top, loss_weight=1, ignore_label=-1):
+    def __init__(self, name, bottom, top, loss_weight=1):
         super(SoftmaxWithLossLayer, self).__init__(name, "SoftmaxWithLoss", bottom, top)
 
         self._params.loss_param.normalization = caffe_pb2.LossParameter.VALID
-        self._params.loss_param.ignore_label = ignore_label
         self._params.loss_weight.extend([loss_weight])
 
 

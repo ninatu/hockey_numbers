@@ -9,6 +9,7 @@ import os
 import argparse
 import tqdm
 import sys
+import random
 
 
 def writeToLMDB(env, readers, start_i, h, w, convertToGray=False):
@@ -72,20 +73,23 @@ class DirReader:
 
         subdirs = os.listdir(self._path)
         subdirs = filter(lambda x: osp.isdir(osp.join(self._path, x)), subdirs)
-
-        for subdir in tqdm.tqdm(subdirs):
+	all_imgfiles = []
+        for subdir in subdirs:
             number = int(subdir)
 
             subdir = osp.join(self._path, subdir)
             imgfiles = os.listdir(subdir)
             imgfiles = map(lambda x: osp.join(subdir, x), imgfiles)
             imgfiles = filter(lambda x: osp.isfile(x), imgfiles)
+	    imgfiles = map(lambda x: (number, x), imgfiles)
+	    all_imgfiles.extend(imgfiles)
 
-	    for imgfile in imgfiles:
-	        if not osp.isfile(imgfile):
-	            continue
-                img = scipy.misc.imread(imgfile)
-                yield (img, number)
+	random.shuffle(all_imgfiles)
+        for number, imgfile in tqdm.tqdm(all_imgfiles):
+            if not osp.isfile(imgfile):
+                continue
+            img = scipy.misc.imread(imgfile)
+            yield (img, number)
 		
 
 def prepare(synthtext, dirs, outfile, h, w, append=False, to_gray=False):

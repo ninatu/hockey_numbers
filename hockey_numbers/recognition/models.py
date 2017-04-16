@@ -5,6 +5,7 @@
 
 from caffe_model.model import CaffeNetworkModel
 from caffe_model.layers import ImageDataLayer
+from caffe_model.layers import DataLayer
 from caffe_model.layers import InnerProductLayer
 from caffe_model.layers import DropoutLayer
 from caffe_model.layers import AccuracyLayer
@@ -47,6 +48,7 @@ class VGG16(BaseModel):
 
     MODEL_DIR = 'vgg16'
     MODEL_FILE = 'numbers_{:s}_{:s}.prototxt'
+    BASEMODEL_WEIGHTS = 'VGG_ILSVRC_16_layers.caffemodel'
     BASEMODEL_FILE = 'VGG_ILSVRC_16_layers.prototxt'
 
 
@@ -80,8 +82,8 @@ class VGG16(BaseModel):
         """creation train/test net"""
 
         train_model = CaffeNetworkModel()
-        train_model.add_layer(ImageDataLayer('train_data', top=['data', 'label'], phase='train', batch_size=16))
-        train_model.add_layer(ImageDataLayer('test_data', top=['data', 'label'], phase='test', batch_size=16))
+        train_model.add_layer(DataLayer('train_data', top=['data', 'label'], phase='train', batch_size=64))
+        train_model.add_layer(DataLayer('test_data', top=['data', 'label'], phase='test', batch_size=64))
 
         train_model.merge(get_pretrain_model())
 
@@ -94,7 +96,7 @@ class VGG16(BaseModel):
 
         """creation deploy net"""
         deploy_model = CaffeNetworkModel()
-        deploy_model.add_layer(ImageDataLayer("deploy_data", top=['data']))
+        deploy_model.add_layer(DataLayer("deploy_data", top=['data'], batch_size=64))
 
         deploy_model.merge(get_pretrain_model())
 
@@ -145,9 +147,14 @@ class VGG16(BaseModel):
                 layer_test_data = layer
         assert layer_train_data is not None
         assert layer_test_data is not None
+	
+	if layer_train_data.type == "Data":
+            layer_train_data.data_param.source = train_dset
+            layer_test_data.data_param.source = valid_dset
+	else:
+	    layer_train_data.image_data_param.source = train_dset
+            layer_test_data.image_data_param.source = valid_dset
 
-        layer_train_data.data_param.source = train_dset
-        layer_test_data.data_param.source = valid_dset
         net_param.input_dim.extend([64, 3, 40, 40])
         return net_param
 
@@ -173,9 +180,12 @@ class VGG16(BaseModel):
     """
 
     def train(self, train_dset, test_dset, pretrained_path=None):
-
-        snapshot_path = osp.join('models', VGG16.MODEL_DIR, str(self.type), 'snapshot')
+	print("JKFJSKDLFJSL", train_dset, test_dset)
+        snapshot_path = osp.join('models', VGG16.MODEL_DIR, str(self._type))
         if not osp.exists(snapshot_path):
+            os.mkdir(snapshot_path)
+	snapshot_path = osp.join(snapshot_path, 'snapshot')
+	if not osp.exists(snapshot_path):
             os.mkdir(snapshot_path)
 
         solver_params = {
@@ -184,7 +194,7 @@ class VGG16(BaseModel):
             'gamma': 0.1,
             'stepsize': 5000,
             'display': 50,
-            'max_iter': 120000,
+            'max_iter': 60,#120000,
             'test_iter': 4,
             'test_interval': 200,
             'momentum': 0.9,
@@ -197,6 +207,8 @@ class VGG16(BaseModel):
         solverproto = SolverProto(net_params=self.get_train_proto_net(train_dset, test_dset),
                                    params=solver_params)
         solver = Solver(solverproto)
+        if pretrained_path is None:
+	    pretrained_path = osp.join('models', VGG16.MODEL_DIR, VGG16.BASEMODEL_WEIGHTS)
         solver.solve(pretrained_path)
         solverproto.close()
 
