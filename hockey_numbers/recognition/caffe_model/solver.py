@@ -55,13 +55,13 @@ class SolverProto:
             pass
         else:
             raise NotImplementedError(params['lr_policy'])
-
-	    self._params.max_iter = params['max_iter']
+        
+        self._params.max_iter = params['max_iter']
         self._params.momentum = params['momentum']
         self._params.weight_decay = params['weight_decay']
         self._params.display = params['display']
-        self._params.test_iter.extend([params['test_iter']])
-        self._params.test_interval = params['test_interval']
+        #self._params.test_iter.extend([params['test_iter']])
+        #self._params.test_interval = params['test_interval']
         self._params.snapshot = params['snapshot']
         self._params.snapshot_prefix = params['snapshot_prefix']
         self._params.solver_mode = SolverProto.SOLVER_MODE[params['solver_mode']]

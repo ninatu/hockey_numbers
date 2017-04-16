@@ -111,11 +111,11 @@ class DataLayer(BaseLayer):
         super(DataLayer, self).__init__(name, 'Data', [], top, phase=phase)
 
         self._params.data_param.backend = DataLayer.DB[backend]
-	self._params.data_param.batch_size = batch_size
+        self._params.data_param.batch_size = batch_size
         #if mean_file:
         #    self.params.transform_param.mean_file = mean_file
     def add_source(self, path):
-	self._params.data_param.source = path
+        self._params.data_param.source = path
 
 class ImageDataLayer(BaseLayer):
 
@@ -129,13 +129,13 @@ class ImageDataLayer(BaseLayer):
 
         super(ImageDataLayer, self).__init__(name, 'ImageData', [], top, phase=phase)
         self._params.data_param.backend = ImageDataLayer.DB[backend]
-	self._params.image_data_param.batch_size = batch_size
+        self._params.image_data_param.batch_size = batch_size
         self._params.image_data_param.shuffle = shuffle
 
         #if mean_file:
         #    self.params.transform_param.mean_file = mean_file
     def add_source(self, path):
-	self._params.image_data_param.source = path
+        self._params.image_data_param.source = path
 
 class ConvolutionLayer(BaseLayer):
     def __init__(self, name, bottom, top,

@@ -147,15 +147,15 @@ class VGG16(BaseModel):
                 layer_test_data = layer
         assert layer_train_data is not None
         assert layer_test_data is not None
-	
-	if layer_train_data.type == "Data":
+    
+        if layer_train_data.type == "Data":
             layer_train_data.data_param.source = train_dset
             layer_test_data.data_param.source = valid_dset
-	else:
-	    layer_train_data.image_data_param.source = train_dset
+        else:
+            layer_train_data.image_data_param.source = train_dset
             layer_test_data.image_data_param.source = valid_dset
 
-        net_param.input_dim.extend([64, 3, 40, 40])
+        #net_param.input_dim.extend([64, 3, 40, 40])
         return net_param
 
     """
@@ -180,12 +180,11 @@ class VGG16(BaseModel):
     """
 
     def train(self, train_dset, test_dset, pretrained_path=None):
-	print("JKFJSKDLFJSL", train_dset, test_dset)
         snapshot_path = osp.join('models', VGG16.MODEL_DIR, str(self._type))
         if not osp.exists(snapshot_path):
             os.mkdir(snapshot_path)
-	snapshot_path = osp.join(snapshot_path, 'snapshot')
-	if not osp.exists(snapshot_path):
+        snapshot_path = osp.join(snapshot_path, 'snapshot')
+        if not osp.exists(snapshot_path):
             os.mkdir(snapshot_path)
 
         solver_params = {
@@ -208,7 +207,7 @@ class VGG16(BaseModel):
                                    params=solver_params)
         solver = Solver(solverproto)
         if pretrained_path is None:
-	    pretrained_path = osp.join('models', VGG16.MODEL_DIR, VGG16.BASEMODEL_WEIGHTS)
+            pretrained_path = osp.join('models', VGG16.MODEL_DIR, VGG16.BASEMODEL_WEIGHTS)
         solver.solve(pretrained_path)
         solverproto.close()
 
