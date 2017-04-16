@@ -13,6 +13,7 @@ from caffe_model.layers import SoftmaxLayer
 from caffe_model.solver import SolverProto
 from caffe_model.solver import Solver
 import caffe
+import os
 import os.path as osp
 from copy import deepcopy
 from enum import Enum
@@ -107,10 +108,10 @@ class VGG16(BaseModel):
 
     def load_model(self):
 
-        model_train_file = VGG16.MODEL_FILE.format(self._type, 'train_test')
+        model_train_file = VGG16.MODEL_FILE.format(str(self._type), 'train_test')
         model_train_file = osp.join('models', VGG16.MODEL_DIR, model_train_file)
 
-        model_deploy_file = VGG16.MODEL_FILE.format(self._type, 'deploy')
+        model_deploy_file = VGG16.MODEL_FILE.format(str(self._type), 'deploy')
         model_deploy_file = osp.join('models', VGG16.MODEL_DIR, model_deploy_file)
 
 
@@ -173,6 +174,10 @@ class VGG16(BaseModel):
 
     def train(self, train_dset, test_dset, pretrained_path=None):
 
+        snapshot_path = osp.join('models', VGG16.MODEL_DIR, str(self.type), 'snapshot')
+        if not osp.exists(snapshot_path):
+            os.mkdir(snapshot_path)
+
         solver_params = {
             'base_lr': 0.001,
             'lr_policy': 'step',
@@ -185,7 +190,7 @@ class VGG16(BaseModel):
             'momentum': 0.9,
             'weight_decay': 0.0005,
             'snapshot': 10000,
-            'snapshot_prefix': "snapshot_model",
+            'snapshot_prefix': snapshot_path + '/' + 'sn',
             'solver_mode': 'GPU',
         }
 
@@ -194,6 +199,8 @@ class VGG16(BaseModel):
         solver = Solver(solverproto)
         solver.solve(pretrained_path)
         solverproto.close()
+
+        solver.get_net().save(osp.join(snapshot_path, 'weights'))
 
     def deploy(self, dataset_path):
         pass

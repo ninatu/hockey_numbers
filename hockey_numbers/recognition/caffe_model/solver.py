@@ -91,8 +91,11 @@ class Solver:
 
     def solve(self, pretrained_path=None):
 
-        solver = caffe.get_solver(self._solverproto.get_path())
+        self._solver = caffe.get_solver(self._solverproto.get_path())
         if pretrained_path:
-            solver.net.copy_from(pretrained_path)
-        solver.solve()
+            self._solver.net.copy_from(pretrained_path)
+        self._solver.solve()
+
+    def get_net(self):
+        return self._solver.net
 
