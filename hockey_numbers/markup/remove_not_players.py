@@ -47,7 +47,7 @@ def remove_not_players(infile, outfile):
         mask = mask.reshape((mask.shape[0], mask.shape[1], 1))
         data = np.concatenate((image, mask), axis=2)
         data = cv2.resize(data, (CLASSIFIER_H, CLASSIFIER_W))
-        features = extract_feature(data, buckets)
+        features = [extract_feature(data, buckets)]
         team = clf.predict(features)
         if team == 1 or team == 2:
             out_db['image'].copy(in_db['image'][imname], imname)
