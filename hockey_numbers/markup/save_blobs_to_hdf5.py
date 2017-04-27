@@ -6,10 +6,11 @@
 import argparse
 import h5py
 import tqdm
-from hockey_numbers.markup.utils.load import load_frame, load_mask
-from hockey_numbers.markup.utils.blob import getBlobsFromMasks, filterBlobsBySize, filterBlobsByField
-from hockey_numbers.markup.utils.image_process import cropByRect, md5_hash
-from hockey_numbers.markup.constants import TEMPLATE_IMAGE
+import os
+from utils.load import load_frame, load_mask
+from utils.blob import getBlobsFromMasks, filterBlobsBySize, filterBlobsByField
+from utils.image_process import cropByRect, md5_hash
+from constants import TEMPLATE_IMAGE
 
 
 def save_blobs_to_hdf5(frame_numbers, outfile, filtered=True):
@@ -47,6 +48,7 @@ def save_blobs_to_hdf5(frame_numbers, outfile, filtered=True):
             out_db['mask'].create_dataset(img_name, img_mask.shape, '|u1', img_mask)
             yet_saved.add(img_name)
 
+
 def main():
     """Parse args and run function"""
 
@@ -56,6 +58,11 @@ def main():
     parser.add_argument('--filter', action='store_true', default=False,
                         help='flag for filtering blobs by size and field')
     args = parser.parse_args()
+
+    if os.path.exists(args.outfile):
+        print("Outfile already exists!")
+        exit(-1)
+
     save_blobs_to_hdf5(args.frameNumbers, args.outfile, args.filter)
 
 

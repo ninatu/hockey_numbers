@@ -6,8 +6,8 @@
 import cv2
 import numpy as np
 
-from hockey_numbers.markup.constants import BLOB_MIN_HEIGHT, BLOB_MAX_HEIGHT, BLOB_MIN_WIDTH, BLOB_MAX_WIDTH
-from hockey_numbers.markup.constants import FIELD_Y, FIELD_H, FIELD_X, FIELD_W
+from constants import BLOB_MIN_HEIGHT, BLOB_MAX_HEIGHT, BLOB_MIN_WIDTH, BLOB_MAX_WIDTH
+from constants import FIELD_Y, FIELD_H, FIELD_X, FIELD_W
 
 class Blob(object):
     def __init__(self, x, y, width, height, area, centroid, mask=None):

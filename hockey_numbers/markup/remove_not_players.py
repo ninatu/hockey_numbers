@@ -18,7 +18,6 @@ CLASSIFY_DATA_PATH = '/media/nina/Seagate Backup Plus Drive/hockey/other/samples
 CLASSIFIER_H, CLASSIFIER_W = (64, 32)
 
 sys.path.append(osp.join(osp.dirname(__file__), CLASSIFY_PATH))
-print(osp.join(osp.dirname(__file__), CLASSIFY_PATH))
 from classifying.classify import get_classifier, extract_feature
 
 def remove_not_players(infile, outfile):
@@ -33,7 +32,7 @@ def remove_not_players(infile, outfile):
     out_db = h5py.File(outfile, 'w')
     out_db.create_group('/image')
     out_db.create_group('/mask')
-    imnames = sorted(in_db['image'].keys())
+    imnames = sorted(in_db['/image'].keys())
 
     #load classifier
     clf = get_classifier(CLASSIFY_DATA_PATH, None, None)
