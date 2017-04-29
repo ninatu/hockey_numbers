@@ -57,7 +57,7 @@ def cropByMask(image, mask, center):
     center = center[0] - n_x, center[1] - n_y
     return image, mask, center, (n_w, n_h)
 
-def cropByRect(frame, x, y, w, h):
+def crop_by_rect(frame, x, y, w, h):
     #x, y, w, h = map(int, [rect["x"], rect["y"], rect["w"],rect["h"]])
     return frame[y:y+h, x:x+w]
 

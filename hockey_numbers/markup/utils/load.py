@@ -9,16 +9,22 @@ import os.path as osp
 from hockey_numbers.markup.constants import FRAME_DIR, TEMPLATE_FRAME, MASK_DIR, TEMPLATE_MASK
 
 
-def load_frame(numb):
+def load_frame(numb=None, name=None):
     """Return None if frame is not saved"""
+    assert (numb is not None) or (name is not None)
 
-    frame_name = osp.join(FRAME_DIR, TEMPLATE_FRAME.format(numb))
-    frame = scipy.misc.imread(frame_name)
+    if numb:
+        name = osp.join(FRAME_DIR, TEMPLATE_FRAME.format(numb))
+
+    frame = scipy.misc.imread(name)
     return frame
 
-def load_mask(numb):
+def load_mask(numb=None, name=None):
     """Return None if mask is not saved"""
+    assert (numb is not None) or (name is not None)
 
-    mask_name = osp.join(MASK_DIR, TEMPLATE_MASK.format(numb))
-    mask = scipy.misc.imread(mask_name)
+    if numb:
+        name = osp.join(MASK_DIR, TEMPLATE_MASK.format(numb))
+
+    mask = scipy.misc.imread(name)
     return mask
