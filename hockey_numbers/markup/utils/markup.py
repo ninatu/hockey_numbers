@@ -2,6 +2,7 @@ from collections import defaultdict
 from copy import deepcopy
 import json
 
+
 class FrameObject:
     def __init__(self, x, y, w, h, data={}):
         self._x = x
@@ -102,17 +103,14 @@ class Markup:
             for frame_name, frame_data in img_dict.items():
                 self._frames[frame_name] = Frame.create_from_json(frame_data)
 
-
     def add_blob(self, frame_name, x, y, w, h, data={}):
         self._frames[frame_name].add_obj(FrameObject(x, y, w, h, data))
-
 
     def save(self, out_path):
         with open(out_path, 'w') as fout:
             json.dump(self.to_json(), fout)
 
-    def print_statistics(self, out_file):
-
+    def get_statistics(self):
         keys = ["number", "number_isnt_visible", "hardly_visible"]
         counts = defaultdict(lambda : 0)
 
@@ -122,14 +120,57 @@ class Markup:
                     if obj.data.get(key, False):
                         counts[key] += 1
 
-        with open(out_file, 'w') as fout:
-            json.dump(counts, fout)
+        return counts
 
-
-
-    def to_json(self):
+    def to_json(self, is_annotation=False):
         img_dict = {}
         for frame_name, frame in self._frames.items():
             img_dict[frame_name] = frame.to_json()
 
-        return img_dict
+        if is_annotation:
+            return {"annotation": img_dict}
+        else:
+            return img_dict
+
+
+def print_statistics(args):
+    import os.path as osp
+    markup = Markup()
+    markup.merge(args.markup_file)
+    statistics = markup.get_statistics()
+
+    out_file = osp.join(osp.dirname(args.markup_file), 'statistics.txt')
+    with open(out_file, 'w') as f_out:
+        json.dump(statistics, f_out)
+
+    print(statistics)
+
+
+def merge_markup(args):
+    markup = Markup()
+    for file in args.files:
+        markup.merge(file)
+
+    with open(args.output, 'w') as f_out:
+        json.dump(markup.to_json(is_annotation=True), f_out)
+
+
+def main():
+    import argparse
+    parser = argparse.ArgumentParser()
+    subparsers = parser.add_subparsers()
+
+    parser_merge = subparsers.add_parser('merge', help='merge marking files')
+    parser_merge.add_argument('files', type=str, nargs='*', help='files to merge')
+    parser_merge.add_argument('-o', '--output', type=str, required=True, help='file to save')
+    parser_merge.set_defaults(func=merge_markup)
+
+    parser_print = subparsers.add_parser('print_statistics', help='print markup statistics')
+    parser_print.add_argument('markup_file', nargs='?', help='input file with markup')
+    parser_print.set_defaults(func=print_statistics)
+    args = parser.parse_args()
+    args.func(args)
+
+
+if __name__ == '__main__':
+    main()

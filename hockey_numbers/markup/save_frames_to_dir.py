@@ -70,7 +70,6 @@ def save_frames_to_dir(frame_numbers, dir_to_save):
         copy_frames(frame_numbers, dir_to_save)
 
 
-
 def main():
     """Parse args and run function"""
 
@@ -80,6 +79,7 @@ def main():
                         help='dir to save frames, default=FRAME_DIR')
     args = parser.parse_args()
     save_frames_to_dir(args.frameNumbers, args.outdir)
+
 
 if __name__ == '__main__':
     main()

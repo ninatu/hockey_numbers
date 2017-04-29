@@ -55,7 +55,7 @@ def main():
     parser = argparse.ArgumentParser(description='Find and Save crops from frames')
     parser.add_argument('frameNumbers', type=int, nargs='+', help='frame numbers')
     parser.add_argument('-o', '--outfile', type=str, required=True, nargs='?', help='file to save hdf5')
-    parser.add_argument('--filter', action='store_true', default=False,
+    parser.add_argument('--no_filter', action='store_true', default=False,
                         help='flag for filtering blobs by size and field')
     args = parser.parse_args()
 
@@ -63,7 +63,7 @@ def main():
         print("Outfile already exists!")
         exit(-1)
 
-    save_blobs_to_hdf5(args.frameNumbers, args.outfile, args.filter)
+    save_blobs_to_hdf5(args.frameNumbers, args.outfile, not args.no_filter)
 
 
 if __name__=='__main__':
