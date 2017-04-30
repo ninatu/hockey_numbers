@@ -9,7 +9,7 @@ DEFAULT_THRESHOLD = 0.11
 parser = argparse.ArgumentParser(description='')
 parser.add_argument('-d', '--inputDirectory', required=True, type=str, nargs='?', help='input directory with image.h5, seg.h5, depth.h5 files')
 parser.add_argument('-o', '--outputFile', required=True, type=str, nargs='?', help='file to save result')
-parser.add_argument('-t', '--threshold', default=DEFAULT_THRESHOLD, type=int, nargs='?', help='threshold for contour in segmentation, default = '+str(DEFAULT_THRESHOLD))
+parser.add_argument('-t', '--threshold', default=DEFAULT_THRESHOLD, type=float, nargs='?', help='threshold for contour in segmentation, default = '+str(DEFAULT_THRESHOLD))
 
 args = parser.parse_args()
 inDir = args.inputDirectory
