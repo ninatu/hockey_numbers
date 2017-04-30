@@ -4,10 +4,12 @@ from utils.load import load_frame, load_mask
 
 import json
 import os.path as osp
+import os
 import argparse
 import h5py
 import re
 import tqdm
+import scipy.misc
 
 
 def print_statistics(args):
@@ -30,6 +32,9 @@ def merge_markup(args):
     with open(args.output, 'w') as f_out:
         json.dump(markup.to_json(is_annotation=True), f_out)
 
+def ensure_dir(dir_name):
+    if not osp.exists(dir_name):
+        os.mkdir(dir_name)
 
 def save_by_mark(args):
     markup_file = args.markup_file
@@ -40,13 +45,46 @@ def save_by_mark(args):
     distibute = args.distribute
 
     assert save_format == 'dir' or save_format == 'hdf5'
+    assert distibute and mark == 'number'
 
     markup = Markup()
     markup.merge(markup_file)
     marked_frame = markup.get_by_mark(mark)
 
     if save_format=='dir':
-        pass
+        ensure_dir(out_name)
+        if with_masks:
+            mask_dir = os.path(out_name, 'mask')
+            ensure_dir(mask_dir)
+            img_dir = osp.join(out_name, 'image')
+            ensure_dir(img_dir)
+        else:
+            img_dir = out_name
+
+        if distibute:
+            for i in range(0, 100):
+                ensure_dir(osp.join(img_dir, str(i)))
+
+        for frame_name, frame in tqdm.tqdm(marked_frame.items()):
+            numb = int(re.search(r'\d+', frame_name).group(0))
+
+            img_frame = load_frame(numb)
+            if with_masks:
+                img_mask = load_mask(numb)
+
+            for obj in frame.objects:
+                img = crop_by_rect(img_frame, obj.x, obj.y, obj.w, obj.h)
+                img_name = obj.data['img_name']
+                mark_data = obj.data[mark]
+
+                img_path = osp.join(img_dir, img_name) if not distibute else osp.join(img_dir, str(mark_data), img_name)
+                scipy.misc.imsave(img_path, img)
+
+                if with_masks:
+                    mask = crop_by_rect(img_mask, obj.x, obj.y, obj.w, obj.h)
+                    mask_path = osp.join(mask_dir, img_name)
+                    scipy.misc.imsave(mask_path, mask)
+
 
     if save_format=='hdf5':
         out_db = h5py.File(out_name, 'w')

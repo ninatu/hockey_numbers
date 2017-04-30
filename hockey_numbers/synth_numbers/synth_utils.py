@@ -83,6 +83,20 @@ def correct_orient(mask, angle, scale):
     return cv2.warpAffine(mask, rot_matrix, (w, h))  # , (cols, rows))
 
 
+def sample_image(img, max_pad=5, max_sigma=1.1, max_kernel=11):
+    pad_x1 = random.randint(0, max_pad + 1)
+    pad_x2 = random.randint(0, max_pad + 1)
+    pad_y1 = random.randint(0, max_pad + 1)
+    pad_y2 = random.randint(0, max_pad + 1)
+    kernel = random.choice(range(1, max_kernel + 1, 2))
+    sigma = max_sigma * random.random()
+
+    h, w, c = img.shape
+    img = img[pad_y1:h - pad_y2, pad_x1:w - pad_x2]
+    if kernel != 1:
+        img = cv2.GaussianBlur(img, (kernel, kernel), sigma)
+    return img.astype(np.uint8), (pad_x1, pad_y1)
+
 class NumberRender:
     def __init__(self, data_dir='synth_text/data'):
         self.text_renderer = RenderFont(data_dir)
@@ -91,8 +105,8 @@ class NumberRender:
         # self._alpha_number = 0.6
         self._min_shift = 0.10
         self._max_shift = 0.25
-        self._min_scale = 0.4
-        self._max_scale = 0.8
+        self._min_scale = 0.5
+        self._max_scale = 0.7
         self._color_h = 3
         self._max_attempt = 15
 
@@ -120,7 +134,7 @@ class NumberRender:
     def sample_scale(self, text):
         scale = self._min_scale + (self._max_scale - self._min_scale) * random.random()
         if len(text) == 1:
-            scale /= 1.5
+            scale /= 1.2
         return scale
 
     def colorize(self, rgb, text_mask):
@@ -176,21 +190,35 @@ class NumberRender:
                 res_img = img_player.copy()
                 res_crop = self.colorize(res_img[y:y + h, x:x + w], sample_text)
                 res_img[y:y + h, x:x + w] = res_crop
-                return res_img
+                return res_img, (x, y, w, h)
 
-        return None
+        return (None, (None, None, None, None))
 
-    def render_text(self, img_player, mask_player):
+    def render_text(self, img_player, mask_player, post_process=True):
         res = self.sample_text()
         if res is None:
             return None
         text_mask, text = res
 
         text_mask = self.sample_transform(text_mask)
+        if len(text) > 1:
+            text_mask = self.correct_orient(text_mask, text, mask_player)
 
-        text_mask = self.correct_orient(text_mask, text, mask_player)
-        res_img = self.place_text(text_mask, text, img_player, mask_player)
+        res_img, (x, y, w, h) = self.place_text(text_mask, text, img_player, mask_player)
         if res_img is not None:
-            return res_img, text
+            if post_process:
+                res_img, (d_x, d_y) = sample_image(res_img)
+                x -= d_x
+                y -= d_y
+                
+            res_data = {}
+            res_data['img'] = res_img
+            res_data['x'] = x
+            res_data['y'] = y
+            res_data['w'] = w
+            res_data['h'] = h
+            res_data['txt'] = text
+            return res_data
 
         return None
+

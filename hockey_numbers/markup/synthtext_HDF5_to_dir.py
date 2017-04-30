@@ -37,7 +37,8 @@ for n in range(1, 100):
 
 
 for name, img_data in tqdm.tqdm(dataGroup.items()):
-    mark = img_data.attrs['txt'][0].decode('utf-8')
+    mark = img_data.attrs['txt'].decode('utf-8')
+    #mark = img_data.attrs['txt'][0].decode('utf-8')
     if int(mark) > 99:
         continue
     img = img_data.value
