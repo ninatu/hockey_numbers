@@ -2,6 +2,8 @@ import os.path as osp
 import os
 import shutil
 import random
+import scipy.misc
+import numpy as np
 from enum import Enum
 
 DATA_FOLDER = 'data'
@@ -40,9 +42,23 @@ class BaseDataset:
     def test_directory(self):
         return self._test_path
 
-    @property
-    def numpy_sample(self):
-        pass
+    def numpy_sample(self, shape, max_count=5000):
+
+        classes = get_dirs(self._train_path)
+        count_per_class = int(max_count / len(classes))
+
+        sample = []
+        for _class in classes:
+            train_dir = osp.join(self._train_path, _class)
+            test_dir = osp.join(self._test_path, _class)
+            files = [osp.join(train_dir, file) for file in get_files(train_dir)]
+            files.extend([osp.join(test_dir, file) for file in get_files(test_dir)])
+            random.shuffle(files)
+            for file in files[:count_per_class]:
+                img = scipy.misc.imread(file, mode='RGB' if shape[2] == 3 else 'L')
+                img = scipy.misc.imresize(img, (shape[0], shape[1]))
+                sample.append(img)
+        return np.array(sample)
 
     def prepare(self, test=0.2):
         #if first split

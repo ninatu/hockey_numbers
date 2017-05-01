@@ -7,8 +7,9 @@ DEFAULT_TEST = 0.2
 DEFAULT_H = 200
 DEFAULT_W = 100
 DEFAULT_EPOCHS = 100
-DEFAULT_EPOCH_IMAGES = 10000
+DEFAULT_EPOCH_IMAGES = 20000
 BATCH_SIZE = 256
+DEFAULT_LR = 0.1
 
 
 def dset_prepare(args):
@@ -21,7 +22,8 @@ def dset_prepare(args):
 
 def train_model(args):
     model = models[args.model](args.clftype)
-    model.set_params(input_size=(args.height, args.width), gray=args.gray, pretrained=args.weights)
+    model.set_params(input_size=(args.height, args.width), gray=args.gray)
+    model.set_params(lr=args.lr, pretrained=args.weights)
 
     model.set_params(batch_size=BATCH_SIZE, epoch_images=DEFAULT_EPOCH_IMAGES)
 
@@ -61,6 +63,7 @@ def main():
     train_parser.add_argument('-w', '--width', type=int, required=False, default=DEFAULT_W, help='width data')
     train_parser.add_argument('-r', '--height', type=int, required=False, default=DEFAULT_H, help='height data')
     train_parser.add_argument('--gray', action='store_true', default=False, help='convert to grayscale')
+    train_parser.add_argument('--lr', type=float, required=False, default=DEFAULT_LR, help='learning rate')
     train_parser.add_argument('-e', '--epochs', type=int, default=DEFAULT_EPOCHS, help='count train epoch')
     train_parser.add_argument('--test_dset', type=DatasetType, default=None, help='dataset type for test')
     train_parser.add_argument('--weights', type=str, default=None, help='pretrainet weights')

@@ -29,12 +29,12 @@ class ClassificationType(Enum):
 class BaseModel(metaclass=ABCMeta):
     def __init__(self, name):
         self._base_name = name
-        name = '{}_{}'.format(name, datetime.datetime.now().strftime("%d_%m_%Y_%H_%M"))
-        self._name = name
+        self._name = '{}_{}'.format(name, datetime.datetime.now().strftime("%d_%m_%Y_%H_%M"))
         self._model = None
         self._input_size = (128, 64)
         self._gray = False
         self._pretrained = None
+        self._lr = 0.1
         self._batch_size = 256
         self._epoch_images = 1000
 
@@ -62,7 +62,8 @@ class BaseModel(metaclass=ABCMeta):
 
         self._save_test_results(dset.name, scores)
 
-    def set_params(self, input_size=None, gray=None, batch_size=None, epoch_images=None, pretrained=None):
+    def set_params(self, input_size=None, gray=None, lr=None,
+                   batch_size=None, epoch_images=None, pretrained=None):
         if input_size is not None:
             self._input_size = input_size
         if gray is not None:
@@ -73,6 +74,8 @@ class BaseModel(metaclass=ABCMeta):
             self._epoch_images = epoch_images
         if batch_size is not None:
             self._batch_size = batch_size
+        if lr is not None:
+            self._lr = lr
 
     def save(self):
         assert self._model is not None
@@ -114,12 +117,12 @@ class BaseModel(metaclass=ABCMeta):
                                        min_lr=min_lr)
 
     def _get_train_generator(self):
-        return  ImageDataGenerator(featurewise_center=False,#True,
+        return  ImageDataGenerator(featurewise_center=True,
                                    samplewise_center=False,
                                    featurewise_std_normalization=False,
                                    samplewise_std_normalization=False,
                                    zca_whitening=False,
-                                   rotation_range=10,
+                                   rotation_range=5,
                                    width_shift_range=0.10,
                                    height_shift_range=0.10,
                                    fill_mode='nearest')
@@ -139,6 +142,7 @@ class VGG16Model(BaseModel):
         self._gray = False
         self._pretrained = None
         self._batch_size = 256
+        self._lr = 0.1
 
     @property
     def input_shape(self):
@@ -170,7 +174,7 @@ class VGG16Model(BaseModel):
                   name = 'vgg16_dense2')(x)
 
         n_outputs = self.n_outputs
-        predictions = Dense( n_outputs,
+        predictions = Dense(n_outputs,
                             activation='softmax' if n_outputs > 1 else 'sigmoid', name='vgg16_softmax')(x)
 
         self._model = Model(input=self._base_model.input, output=predictions)
@@ -196,7 +200,7 @@ class VGG16Model(BaseModel):
                      self._get_reducer(), self._get_stoper()]
 
         generator = self._get_train_generator()
-        #generator.fit(train_dset.numpy_sample)
+        generator.fit(train_dset.numpy_sample(self.input_shape))
 
         train_generator = generator.flow_from_directory(train_dset.train_directory,
                                                         target_size=self._input_size,
@@ -216,10 +220,10 @@ class VGG16Model(BaseModel):
                                                         color_mode="grayscale" if self._gray else 'rgb')
 
         self._freeze_base_model()
-        self._fit_step(0.1, int(epochs * 0.3), train_generator, valid_generator, callbacks)
+        self._fit_step(self._lr, int(epochs * 0.3), train_generator, valid_generator, callbacks)
 
         self._unfreeze_base_model()
-        self._fit_step(0.03, int(epochs * 0.7), train_generator, valid_generator, callbacks)
+        self._fit_step(self._lr * 0.1, int(epochs * 0.7), train_generator, valid_generator, callbacks)
         self.save()
 
         if test_dset is not None:
