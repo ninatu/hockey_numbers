@@ -109,7 +109,7 @@ class BaseModel(metaclass=ABCMeta):
                              patience=patience)
 
 
-    def _get_reducer(self, factor=np.sqrt(0.1), patience=5, min_lr=0.00001):
+    def _get_reducer(self, factor=0.1, patience=5, min_lr=0.00001):
         return ReduceLROnPlateau(monitor='val_loss',
                                        factor=factor,
                                        verbose=1,
@@ -122,9 +122,9 @@ class BaseModel(metaclass=ABCMeta):
                                    featurewise_std_normalization=False,
                                    samplewise_std_normalization=False,
                                    zca_whitening=False,
-                                   rotation_range=5,
-                                   width_shift_range=0.10,
-                                   height_shift_range=0.10,
+                                   rotation_range=0,
+                                   width_shift_range=0.1,
+                                   height_shift_range=0.1,
                                    fill_mode='nearest')
     def _get_test_generator(self):
         return ImageDataGenerator()
@@ -169,17 +169,19 @@ class VGG16Model(BaseModel):
         x = GlobalAveragePooling2D()(x)
         x = Dense(1024, activation='relu', kernel_initializer=RandomNormal(mean=0.0, stddev=0.001),
                   name='vgg16_dense1')(x)
-        x = Dropout(0.5, name='vgg16_drop1')(x)
-        x = Dense(1024, activation='relu', kernel_initializer=RandomNormal(mean=0.0, stddev=0.0010),
-                  name = 'vgg16_dense2')(x)
+        #x = Dropout(0.7, name='vgg16_drop1')(x)
+        #x = Dense(1024, activation='relu', kernel_initializer=RandomNormal(mean=0.0, stddev=0.01),
+        #          name = 'vgg16_dense2')(x)
 
         n_outputs = self.n_outputs
         predictions = Dense(n_outputs,
-                            activation='softmax' if n_outputs > 1 else 'sigmoid', name='vgg16_softmax')(x)
+                            activation='softmax' if n_outputs > 1 else 'sigmoid', name='vgg16_softmax',
+                            kernel_initializer=RandomNormal(mean=0.0, stddev=0.001))(x)
 
         self._model = Model(input=self._base_model.input, output=predictions)
 
-        if self._pretrained:
+        if self._pretrained is not None:
+            print("LOAD MODEL")
             self._model.load_weights(self._pretrained, by_name=True)
 
     def _freeze_base_model(self):
@@ -219,12 +221,17 @@ class VGG16Model(BaseModel):
                                                         shuffle=True,
                                                         color_mode="grayscale" if self._gray else 'rgb')
 
-        self._freeze_base_model()
-        self._fit_step(self._lr, int(epochs * 0.3), train_generator, valid_generator, callbacks)
+        if self._pretrained is None:
+            self._freeze_base_model()
+            self._fit_step(self._lr, int(epochs * 0.5), train_generator, valid_generator, callbacks)
 
-        self._unfreeze_base_model()
-        self._fit_step(self._lr * 0.1, int(epochs * 0.7), train_generator, valid_generator, callbacks)
-        self.save()
+            self._unfreeze_base_model()
+            self._fit_step(self._lr*0.1, int(epochs * 0.5), train_generator, valid_generator, callbacks)
+            self.save()
+        else:
+            self._unfreeze_base_model()
+            self._fit_step(self._lr, epochs, train_generator, valid_generator, callbacks)
+            self.save()
 
         if test_dset is not None:
             self.evaluate(test_dset)

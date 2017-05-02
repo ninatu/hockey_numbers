@@ -6,8 +6,8 @@ import scipy.misc
 import numpy as np
 from enum import Enum
 
-DATA_FOLDER = 'data'
-
+#DATA_FOLDER = 'data'
+DATA_FOLDER = '/home/GRAPHICS2/19n_tul/data'
 
 def get_dirs(path):
     files = os.listdir(path)
