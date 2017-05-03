@@ -41,7 +41,7 @@ def train_model(args):
         if not valid_dset.is_prepared:
             valid_dset.prepare(test=0)
     else:
-        test_dset = None
+        valid_dset = None
 
     model.train(train_dir=train_dset.train_directory,
                 valid_dir=valid_dset.train_directory if valid_dset is not None else train_dset.test_directory,

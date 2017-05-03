@@ -8,9 +8,9 @@ from enum import Enum
 
 from models import ClassificationType
 
-DATA_FOLDER = 'data'
+#DATA_FOLDER = 'data'
 DIR_NOT_NUMBER = 'not_number'
-#DATA_FOLDER = '/home/GRAPHICS2/19n_tul/data'
+DATA_FOLDER = '/home/GRAPHICS2/19n_tul/data'
 
 def get_dirs(path):
     files = os.listdir(path)
@@ -70,7 +70,7 @@ class BaseDataset:
             for file in files[:count_per_class]:
                 img = scipy.misc.imread(file, mode='RGB' if shape[2] == 3 else 'L')
                 img = scipy.misc.imresize(img, (shape[0], shape[1]))
-                sample.append(img)
+                sample.append(img[:, :, np.newaxis])
         return np.array(sample)
 
     def prepare(self, type, test_per=0.2):

@@ -185,10 +185,10 @@ class BaseModel(AbstractModel):
                                                         batch_size=self._batch_size,
                                                         class_mode='binary' if self.n_outputs == 1 else "categorical",
                                                         shuffle=True,
-                                                        color_mode="grayscale" if self._gray else 'rgb',
-                                                        save_to_dir='data/gen_img',
-                                                        save_prefix='img',
-                                                        save_format='png')
+                                                        color_mode="grayscale" if self._gray else 'rgb')
+                                                        #save_to_dir='data/gen_img',
+                                                        #save_prefix='img',
+                                                        #save_format='png')
 
         valid_generator = generator.flow_from_directory(valid_dir,
                                                         target_size=self._input_size,
@@ -280,34 +280,34 @@ class GerkeModel(BaseModel):
 
         input = Input(shape=self.input_shape)
         x = input
-        x = Conv2D(filters=16, kernel_size=(5, 5), strides=(1, 1), padding='valid',
-                   activation='relu', kernel_initializer=RandomNormal(mean=0.0, stddev=0.01),
+        x = Conv2D(filters=16, kernel_size=(5, 5), strides=(1, 1), padding='same',
+                   activation='relu', #kernel_initializer=RandomNormal(mean=0.0, stddev=0.01),
                    name='gerke_conv1')(x)
-        x = MaxPooling2D(pool_size=(2, 2), strides=(2, 2), padding='valid',
+        x = MaxPooling2D(pool_size=(2, 2), strides=(2, 2), padding='same',
                          name='gerke_max1')(x)
 
-        x = Conv2D(filters=30, kernel_size=(7, 7), strides=(1, 1), padding='valid',
-                   activation='relu', kernel_initializer=RandomNormal(mean=0.0, stddev=0.01),
+        x = Conv2D(filters=30, kernel_size=(7, 7), strides=(1, 1), padding='same',
+                   activation='relu', #kernel_initializer=RandomNormal(mean=0.0, stddev=0.01),
                    name='gerke_conv2')(x)
-        x = MaxPooling2D(pool_size=(3, 3), strides=(3, 3), padding='valid',
+        x = MaxPooling2D(pool_size=(3, 3), strides=(3, 3), padding='same',
                          name='gerke_max2')(x)
 
-        x = Conv2D(filters=50, kernel_size=(5, 5), strides=(1, 1), padding='valid',
-                   activation='relu',  kernel_initializer=RandomNormal(mean=0.0, stddev=0.01),
+        x = Conv2D(filters=50, kernel_size=(3, 3), strides=(1, 1), padding='same',
+                   activation='relu', # kernel_initializer=RandomNormal(mean=0.0, stddev=0.01),
                    name='gerke_conv3')(x)
-        x = MaxPooling2D(pool_size=(3, 3), strides=(3, 3), padding='valid',
+        x = MaxPooling2D(pool_size=(3, 3), strides=(3, 3), padding='same',
                          name='gerke_max3')(x)
 
         x = Flatten(name='gerke_flat')(x)
-        x = Dense(50, activation='relu', kernel_initializer=RandomNormal(mean=0.0, stddev=0.001),
+        x = Dense(50, activation='relu', #kernel_initializer=RandomNormal(mean=0.0, stddev=0.01),
                   name='gerke_dense1')(x)
 
-        x = Dense(50, activation='relu', kernel_initializer=RandomNormal(mean=0.0, stddev=0.001),
-                  name='gerke_dense2')(x)
+        #x = Dense(50, activation='relu', kernel_initializer=RandomNormal(mean=0.0, stddev=0.01),
+        #          name='gerke_dense2')(x)
 
         predictions = Dense(self.n_outputs,
                   activation='softmax' if self.n_outputs > 1 else 'sigmoid',
-                  kernel_initializer=RandomNormal(mean=0.0, stddev=0.001),
+                  #kernel_initializer=#RandomNormal(mean=0.0, stddev=0.01),
                   name='gerke_softmax')(x)
 
         self._model = Model(input=input, output=predictions)
