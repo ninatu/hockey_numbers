@@ -207,13 +207,16 @@ class BaseModel(AbstractModel):
         if test_dir is not None:
             self.evaluate(test_dir)
 
-    def _fit_step(self, lr, epochs, train_generator, valid_generator, callbacks):
-
+    def _compile(self, lr=0.01):
         sgd = optimizers.SGD(lr=lr, decay=1e-6, momentum=0.9, nesterov=True)
 
         self._model.compile(loss='categorical_crossentropy' if self.n_outputs > 1 else 'binary_crossentropy',
                             optimizer=sgd,
-                            metrics=['accuracy'])
+                            metrics=['categorical_accuracy' if self.n_outputs > 1 else 'binary_accuracy'])
+
+    def _fit_step(self, lr, epochs, train_generator, valid_generator, callbacks):
+
+        self._compile(lr)
 
         self._model.fit_generator(train_generator,
                                   epochs=epochs, verbose=1,
@@ -223,6 +226,8 @@ class BaseModel(AbstractModel):
                                   callbacks=callbacks)
 
     def evaluate(self, test_dir, test_images=800):
+        self._compile()
+
         generator = self._get_test_generator()
         test_generator = generator.flow_from_directory(test_dir,
                                                        target_size=self._input_size,
@@ -236,6 +241,8 @@ class BaseModel(AbstractModel):
         for metric, score in zip(self._model.metrics_names, scores):
             print("{} = {}".format(metric, score))
 
+    def predict(self, img):
+        pass
         #self._save_test_results(dset.name, scores)
 
 
@@ -268,6 +275,8 @@ class VGG16Model(BaseModel):
 
         if self._pretrained is not None:
             self._model.load_weights(self._pretrained, by_name=True)
+
+
 
 
 class GerkeModel(BaseModel):

@@ -70,7 +70,9 @@ class BaseDataset:
             for file in files[:count_per_class]:
                 img = scipy.misc.imread(file, mode='RGB' if shape[2] == 3 else 'L')
                 img = scipy.misc.imresize(img, (shape[0], shape[1]))
-                sample.append(img[:, :, np.newaxis])
+                if shape[2] == 1:
+                    img = img[:, :, np.newaxis]
+                sample.append(img)
         return np.array(sample)
 
     def prepare(self, type, test_per=0.2):

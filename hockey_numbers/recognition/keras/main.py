@@ -14,7 +14,6 @@ DEFAULT_LR = 0.1
 
 
 def dset_prepare(args):
-
     dset = datasets[args.dset]()
     dset.prepare(type=args.ctype, test_per=args.t)
 
@@ -27,19 +26,19 @@ def train_model(args):
 
     train_dset = datasets[args.dset]()
     if not train_dset.is_prepared:
-        train_dset.prepare(test=0.2)
+        train_dset.prepare(type=args.clftype, test_per=0.2)
 
     if args.test_dset is not None:
         test_dset = datasets[args.test_dset]()
         if not test_dset.is_prepared:
-            test_dset.prepare(test=1.0)
+            test_dset.prepare(type=args.clftype, test_per=1.0)
     else:
         test_dset = None
 
     if args.valid_dset is not None:
         valid_dset = datasets[args.test_dset]()
         if not valid_dset.is_prepared:
-            valid_dset.prepare(test=0)
+            valid_dset.prepare(type=args.clftype, test_per=0)
     else:
         valid_dset = None
 
