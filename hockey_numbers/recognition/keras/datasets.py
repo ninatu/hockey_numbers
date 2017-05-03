@@ -86,7 +86,7 @@ class BaseDataset:
                 shutil.move(osp.join(self._data_path, _class), osp.join(self._img_path, _class))
 
         self._clean_train_test()
-
+          
         if type == ClassificationType.NUMBERS:
             for number in range(0, 100):
                 img_number_path = osp.join(self._img_path, str(number))
@@ -109,14 +109,14 @@ class BaseDataset:
             count_for_class = min(count_class_0, count_class_1)
             print(count_for_class)
 
-            for i in range(0, 2):
+            for i in [1, 2]:
                 os.mkdir(osp.join(self._train_path, str(i)))
                 os.mkdir(osp.join(self._test_path, str(i)))
 
             # CLASS 0
-            move_dir2dir(train_not_number_dir, osp.join(self._train_path, '0'),
+            move_dir2dir(train_not_number_dir, osp.join(self._train_path, '2'),
                          count=int(count_for_class * (1 - test_per)))
-            move_dir2dir(test_not_number_dir, osp.join(self._test_path, '0'),
+            move_dir2dir(test_not_number_dir, osp.join(self._test_path, '2'),
                          count=int(count_for_class * test_per))
 
             # CLASS 1
@@ -145,7 +145,7 @@ class BaseDataset:
             for _class in get_dirs(numbers_dir):
                 move_dir2dir(osp.join(numbers_dir, _class), osp.join(self._img_path, _class))
 
-            not_number_dir = osp.join(self._train_path, '0')
+            not_number_dir = osp.join(self._train_path, '2')
             move_dir2dir(not_number_dir, osp.join(DATA_FOLDER, DIR_NOT_NUMBER, 'train'))
 
             # MOVE FROM TEST
@@ -153,7 +153,7 @@ class BaseDataset:
             for _class in get_dirs(numbers_dir):
                 move_dir2dir(osp.join(numbers_dir, _class), osp.join(self._img_path, _class))
 
-            not_number_dir = osp.join(self._test_path, '0')
+            not_number_dir = osp.join(self._test_path, '2')
             move_dir2dir(not_number_dir, osp.join(DATA_FOLDER, DIR_NOT_NUMBER, 'test'))
         elif len(classes) == 100:
             for _class in classes:
