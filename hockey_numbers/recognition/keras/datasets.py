@@ -6,8 +6,11 @@ import scipy.misc
 import numpy as np
 from enum import Enum
 
-#DATA_FOLDER = 'data'
-DATA_FOLDER = '/home/GRAPHICS2/19n_tul/data'
+from models import ClassificationType
+
+DATA_FOLDER = 'data'
+DIR_NOT_NUMBER = 'not_number'
+#DATA_FOLDER = '/home/GRAPHICS2/19n_tul/data'
 
 def get_dirs(path):
     files = os.listdir(path)
@@ -18,6 +21,15 @@ def get_files(path):
     files = os.listdir(path)
     return list(filter(lambda x: osp.isfile(osp.join(path, x)), files))
 
+def move_dir2dir(indir, outdir, count=None):
+    files = os.listdir(indir)
+    if count:
+        random.shuffle(files)
+        files = files[:count]
+
+    for file in files:
+        os.rename(osp.join(indir, file), osp.join(outdir, file))
+
 
 class BaseDataset:
     def __init__(self, dataset_dir):
@@ -25,6 +37,7 @@ class BaseDataset:
         self._data_path = osp.join(DATA_FOLDER, dataset_dir)
         self._train_path = osp.join(self._data_path, 'train')
         self._test_path = osp.join(self._data_path, 'test')
+        self._img_path = osp.join(self._data_path, 'img')
 
     @property
     def name(self):
@@ -60,48 +73,114 @@ class BaseDataset:
                 sample.append(img)
         return np.array(sample)
 
-    def prepare(self, test=0.2):
+    def prepare(self, type, test_per=0.2):
         #if first split
         if not osp.exists(self._train_path):
             classes = get_dirs(self._data_path)
+            os.mkdir(self._train_path)
+            os.mkdir(self._test_path)
+            os.mkdir(self._img_path)
             for _class in classes:
-                os.makedirs(osp.join(self._train_path, _class), exist_ok=True)
-                os.makedirs(osp.join(self._test_path, _class), exist_ok=True)
+                shutil.move(osp.join(self._data_path, _class), osp.join(self._img_path, _class))
 
-            for _class in classes:
-                for file in get_files(osp.join(self._data_path, _class)):
-                    in_path = osp.join(self._data_path, _class, file)
-                    out_path = osp.join(self._train_path, _class, file)
-                    shutil.move(in_path, out_path)
-                shutil.rmtree(osp.join(self._data_path, _class))
+        self._clean_train_test()
 
+        if type == ClassificationType.NUMBERS:
+            for number in range(0, 100):
+                img_number_path = osp.join(self._img_path, str(number))
+                train_number_path = osp.join(self._train_path, str(number))
+                test_number_path = osp.join(self._test_path, str(number))
+
+                os.mkdir(train_number_path)
+                os.mkdir(test_number_path)
+                self._split(train_number_path, test_number_path, img_number_path, test_per)
+        elif type == ClassificationType.BINARY:
+            train_not_number_dir = osp.join(DATA_FOLDER, DIR_NOT_NUMBER, 'train')
+            test_not_number_dir = osp.join(DATA_FOLDER, DIR_NOT_NUMBER, 'test')
+
+            count_class_0 = len(get_files(train_not_number_dir)) + len(get_files(test_not_number_dir))
+            count_class_1 = 0
+            for number in range(1, 100):
+                img_number_path = osp.join(self._img_path, str(number))
+                count_class_1 += len(get_files(img_number_path))
+
+            count_for_class = min(count_class_0, count_class_1)
+            print(count_for_class)
+
+            for i in range(0, 2):
+                os.mkdir(osp.join(self._train_path, str(i)))
+                os.mkdir(osp.join(self._test_path, str(i)))
+
+            # CLASS 0
+            move_dir2dir(train_not_number_dir, osp.join(self._train_path, '0'),
+                         count=int(count_for_class * (1 - test_per)))
+            move_dir2dir(test_not_number_dir, osp.join(self._test_path, '0'),
+                         count=int(count_for_class * test_per))
+
+            # CLASS 1
+            numbers = list(range(1, 100))
+            random.shuffle(numbers)
+            count = 0
+            for number in numbers:
+                img_number_path = osp.join(self._img_path, str(number))
+                train_number_path = osp.join(self._train_path, '1', str(number))
+                test_number_path = osp.join(self._test_path, '1', str(number))
+
+                os.mkdir(train_number_path)
+                os.mkdir(test_number_path)
+                count += len(get_files(img_number_path))
+                if count >= count_for_class:
+                    break
+                self._split(train_number_path, test_number_path, img_number_path, test_per)
+
+    def _clean_train_test(self):
         classes = get_dirs(self._train_path)
-        for _class in classes:
-            self._split(_class, test)
 
-    def _split(self, _class, test_per):
-        train_dir = osp.join(self._train_path, _class)
-        test_dir = osp.join(self._test_path, _class)
+        # if train is prepared for binary classification
+        if len(classes) == 2:
+            # MOVE FROM TRAIN
+            numbers_dir = osp.join(self._train_path, '1')
+            for _class in get_dirs(numbers_dir):
+                move_dir2dir(osp.join(numbers_dir, _class), osp.join(self._img_path, _class))
 
-        files = [osp.join(train_dir, file)
-                 for file in get_files(train_dir)]
-        files.extend([osp.join(test_dir, file)
-                      for file in get_files(test_dir)])
+            not_number_dir = osp.join(self._train_path, '0')
+            move_dir2dir(not_number_dir, osp.join(DATA_FOLDER, DIR_NOT_NUMBER, 'train'))
 
+            # MOVE FROM TEST
+            numbers_dir = osp.join(self._test_path, '1')
+            for _class in get_dirs(numbers_dir):
+                move_dir2dir(osp.join(numbers_dir, _class), osp.join(self._img_path, _class))
+
+            not_number_dir = osp.join(self._test_path, '0')
+            move_dir2dir(not_number_dir, osp.join(DATA_FOLDER, DIR_NOT_NUMBER, 'test'))
+        elif len(classes) == 100:
+            for _class in classes:
+                move_dir2dir(osp.join(self._train_path, _class), osp.join(self._img_path, _class))
+                move_dir2dir(osp.join(self._test_path, _class), osp.join(self._img_path, _class))
+        elif len(classes) == 0:
+            pass
+        else:
+            raise NotImplementedError
+
+        for _class in get_dirs(self._train_path):
+            shutil.rmtree(osp.join(self._train_path, _class))
+        for _class in get_dirs(self._test_path):
+            shutil.rmtree(osp.join(self._test_path, _class))
+
+    def _split(self, train_dir, test_dir, input_dir, test_per):
+        files = get_files(input_dir)
         random.shuffle(files)
+
         n = int(len(files) * test_per)
         for file in files[:n]:
-            dst = osp.join(test_dir, osp.basename(file))
-            if file != dst:
-                os.rename(file, dst)
+            src = osp.join(input_dir, file)
+            dst = osp.join(test_dir, file)
+            os.rename(src, dst)
 
         for file in files[n:]:
-            dst = osp.join(train_dir, osp.basename(file))
-            if file != dst:
-                os.rename(file, dst)
-
-    #def get(self):
-    #    return self._train_path, self._test_path
+            src = osp.join(input_dir, file)
+            dst = osp.join(train_dir, file)
+            os.rename(src, dst)
 
 
 class SynthNumber(BaseDataset):
