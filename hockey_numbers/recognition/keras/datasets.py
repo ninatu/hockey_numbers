@@ -8,9 +8,9 @@ from enum import Enum
 
 from models import ClassificationType
 
-DATA_FOLDER = 'data'
+#DATA_FOLDER = 'data'
 DIR_NOT_NUMBER = 'not_number'
-#DATA_FOLDER = '/home/GRAPHICS2/19n_tul/data'
+DATA_FOLDER = '/home/GRAPHICS2/19n_tul/data'
 
 
 def get_dirs(path):
@@ -107,7 +107,7 @@ class BaseDataset:
         self._clean_train_test()
 
         if type == ClassificationType.NUMBERS:
-            for number in range(0, 100):
+            for number in get_dirs(self._img_path):
                 img_number_path = osp.join(self._img_path, str(number))
                 train_number_path = osp.join(self._train_path, str(number))
                 test_number_path = osp.join(self._test_path, str(number))

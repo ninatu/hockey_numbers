@@ -17,7 +17,7 @@ from keras.callbacks import ReduceLROnPlateau, CSVLogger, EarlyStopping, TensorB
 from keras.initializers import RandomNormal
 from keras.preprocessing.image import ImageDataGenerator
 from keras import backend as K
-
+import tensorflow as tf
 
 MODEL_DATA_DIR = 'models'
 
@@ -157,6 +157,12 @@ class BaseModel(AbstractModel):
     def clear_session(self):
         K.clear_session()
 
+    def set_session(self):
+        config = tf.ConfigProto()
+        config.gpu_options.allow_growth=True
+        sess = tf.Session(config=config)
+        K.set_session(sess)
+    
     def _freeze_base_model(self):
         if self._base_model is not None:
             for layer in self._base_model.layers:
@@ -317,7 +323,7 @@ class GerkeModel(BaseModel):
         predictions = Dense(self.n_outputs,
                   activation='softmax' if self.n_outputs > 1 else 'sigmoid',
                   #kernel_initializer=#RandomNormal(mean=0.0, stddev=0.01),
-                  name='gerke_softmax')(x)
+                  name='gerke_softmax_'+ self._type.value)(x)
 
         self._model = Model(input=input, output=predictions)
 
