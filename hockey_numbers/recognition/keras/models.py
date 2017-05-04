@@ -50,7 +50,7 @@ class BaseModel(AbstractModel):
     def __init__(self, name, type):
         self._type = type
         self._base_name = '{}_{}'.format(name, type.value)
-        self._name = '{}_{}'.format(name, datetime.datetime.now().strftime("%d_%m_%Y_%H_%M"))
+        self._name = '{}_{}'.format(self._base_name, datetime.datetime.now().strftime("%d_%m_%Y_%H_%M"))
 
         self._model = None
         self._base_model = None
@@ -69,6 +69,10 @@ class BaseModel(AbstractModel):
     @property
     def name(self):
         return self._name
+
+    @property
+    def type(self):
+        return self._type
 
     @property
     def input_shape(self):
@@ -113,10 +117,13 @@ class BaseModel(AbstractModel):
                 fout.write("{} = {}\n".format(metric, score))
 
     def _get_checkpointer(self, period):
-        checkpoint_path = self.name + '_weights.{epoch:02d}-{val_acc:.2f}-{val_loss:.2f}.hdf5'
+        if self.type == ClassificationType.NUMBERS:
+            checkpoint_path = self.name + '_weights.{epoch:02d}-{val_acc:.2f}-{val_loss:.2f}.hdf5'
+        else:
+            checkpoint_path = self.name + '_weights.{epoch:02d}-{val_binary_accuracy:.2f}-{val_loss:.2f}.hdf5'
         checkpoint_path = osp.join(MODEL_DATA_DIR, 'checkpoints', checkpoint_path)
         return ModelCheckpoint(filepath=checkpoint_path,
-                                                       monitor='val_acc',
+                                                       monitor='val_loss',
                                                        verbose=1,
                                                        period=period)
 
@@ -157,7 +164,7 @@ class BaseModel(AbstractModel):
     def clear_session(self):
         K.clear_session()
 
-    def set_session(self):
+    def start_session(self):
         config = tf.ConfigProto()
         config.gpu_options.allow_growth=True
         sess = tf.Session(config=config)
@@ -231,7 +238,7 @@ class BaseModel(AbstractModel):
                                   validation_steps=int(0.1 * self._epoch_images) / self._batch_size,
                                   callbacks=callbacks)
 
-    def evaluate(self, test_dir, test_images=800):
+    def evaluate(self, test_dir, test_images=10000):
         self._compile()
 
         generator = self._get_test_generator()
