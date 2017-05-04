@@ -8,9 +8,10 @@ from enum import Enum
 
 from models import ClassificationType
 
-#DATA_FOLDER = 'data'
+DATA_FOLDER = 'data'
 DIR_NOT_NUMBER = 'not_number'
-DATA_FOLDER = '/home/GRAPHICS2/19n_tul/data'
+#DATA_FOLDER = '/home/GRAPHICS2/19n_tul/data'
+
 
 def get_dirs(path):
     files = os.listdir(path)
@@ -21,6 +22,7 @@ def get_files(path):
     files = os.listdir(path)
     return list(filter(lambda x: osp.isfile(osp.join(path, x)), files))
 
+"""
 def move_dir2dir(indir, outdir, count=None):
     files = os.listdir(indir)
     if count:
@@ -29,6 +31,23 @@ def move_dir2dir(indir, outdir, count=None):
 
     for file in files:
         os.rename(osp.join(indir, file), osp.join(outdir, file))
+"""
+
+
+def unlink_files_in_dir(indir):
+    files = os.listdir(indir)
+    for file in files:
+        os.unlink(osp.join(indir, file))
+
+
+def link_files_to_dir(indir, outdir, count=None):
+    files = os.listdir(indir)
+    if count:
+        random.shuffle(files)
+        files = files[:count]
+    for file in files:
+        os.link(osp.join(indir, file), osp.join(outdir, file))
+
 
 
 class BaseDataset:
@@ -86,7 +105,7 @@ class BaseDataset:
                 shutil.move(osp.join(self._data_path, _class), osp.join(self._img_path, _class))
 
         self._clean_train_test()
-          
+
         if type == ClassificationType.NUMBERS:
             for number in range(0, 100):
                 img_number_path = osp.join(self._img_path, str(number))
@@ -114,9 +133,9 @@ class BaseDataset:
                 os.mkdir(osp.join(self._test_path, str(i)))
 
             # CLASS 0
-            move_dir2dir(train_not_number_dir, osp.join(self._train_path, '2'),
+            link_files_to_dir(train_not_number_dir, osp.join(self._train_path, '2'),
                          count=int(count_for_class * (1 - test_per)))
-            move_dir2dir(test_not_number_dir, osp.join(self._test_path, '2'),
+            link_files_to_dir(test_not_number_dir, osp.join(self._test_path, '2'),
                          count=int(count_for_class * test_per))
 
             # CLASS 1
@@ -140,25 +159,17 @@ class BaseDataset:
 
         # if train is prepared for binary classification
         if len(classes) == 2:
-            # MOVE FROM TRAIN
-            numbers_dir = osp.join(self._train_path, '1')
-            for _class in get_dirs(numbers_dir):
-                move_dir2dir(osp.join(numbers_dir, _class), osp.join(self._img_path, _class))
+            unlink_files_in_dir(osp.join(self._train_path, '2'))
+            unlink_files_in_dir(osp.join(self._test_path, '2'))
 
-            not_number_dir = osp.join(self._train_path, '2')
-            move_dir2dir(not_number_dir, osp.join(DATA_FOLDER, DIR_NOT_NUMBER, 'train'))
-
-            # MOVE FROM TEST
-            numbers_dir = osp.join(self._test_path, '1')
-            for _class in get_dirs(numbers_dir):
-                move_dir2dir(osp.join(numbers_dir, _class), osp.join(self._img_path, _class))
-
-            not_number_dir = osp.join(self._test_path, '2')
-            move_dir2dir(not_number_dir, osp.join(DATA_FOLDER, DIR_NOT_NUMBER, 'test'))
+            classes = get_dirs(osp.join(self._train_path, '1'))
+            for _class in classes:
+                unlink_files_in_dir(osp.join(self._train_path, '1', _class))
+                unlink_files_in_dir(osp.join(self._test_path, '1', _class))
         elif len(classes) == 100:
             for _class in classes:
-                move_dir2dir(osp.join(self._train_path, _class), osp.join(self._img_path, _class))
-                move_dir2dir(osp.join(self._test_path, _class), osp.join(self._img_path, _class))
+                unlink_files_in_dir(osp.join(self._train_path, _class))
+                unlink_files_in_dir(osp.join(self._test_path, _class))
         elif len(classes) == 0:
             pass
         else:
@@ -177,12 +188,12 @@ class BaseDataset:
         for file in files[:n]:
             src = osp.join(input_dir, file)
             dst = osp.join(test_dir, file)
-            os.rename(src, dst)
+            os.link(src, dst)
 
         for file in files[n:]:
             src = osp.join(input_dir, file)
             dst = osp.join(train_dir, file)
-            os.rename(src, dst)
+            os.link(src, dst)
 
 
 class SynthNumber(BaseDataset):
