@@ -27,7 +27,9 @@ def train_model(args):
     train_dset = datasets[args.dset]()
     if not train_dset.is_prepared:
         train_dset.prepare(type=args.ctype, test_per=0.2)
+    
 
+    
     if args.test_dset is not None:
         test_dset = datasets[args.test_dset]()
         if not test_dset.is_prepared:
@@ -48,7 +50,7 @@ def train_model(args):
                 valid_dir=valid_dset.train_directory if valid_dset is not None else train_dset.test_directory,
                 epochs=args.epochs,
                 freeze_base=args.freeze,
-                numpy_data_sample=train_dset.numpy_sample((args.height, args.width, 1 if args.gray else 3)),
+                train_data_sample=train_dset.numpy_train_sample((args.height, args.width, 1 if args.gray else 3)),
                 test_dir=None if test_dset is None else test_dset.test_directory)
 
     model.clear_session()

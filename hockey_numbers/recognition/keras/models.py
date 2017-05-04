@@ -107,8 +107,17 @@ class BaseModel(AbstractModel):
 
     def save(self):
         assert self._model is not None
-        self._model.save(osp.join(MODEL_DATA_DIR, self._base_name + '_model.hdf5'))
+        model_path = osp.join(MODEL_DATA_DIR, self.name + '_model.hdf5')
+        print('Save model to {}'.format(model_path))
+        self._pretrained = model_path
+        self._model.save(model_path)
+
         self._model.save(osp.join(MODEL_DATA_DIR, self.name + '_model.hdf5'))
+
+    def _load_weights(self):
+        if self._pretrained is not None:
+            print("Load weights by path: {}".format(self._pretrained))
+            self._model.load_weights(self._pretrained, by_name=True)       
 
     def _save_test_results(self, dset_name, scores):
         f_path = osp.join(MODEL_DATA_DIR, '{}_test_{}_acc_{}.txt'.format(self.name, dset_name, scores[1]))
@@ -159,7 +168,7 @@ class BaseModel(AbstractModel):
                                    fill_mode='nearest')
 
     def _get_test_generator(self):
-        return ImageDataGenerator()
+        return ImageDataGenerator(featurewise_center=True)
 
     def clear_session(self):
         K.clear_session()
@@ -180,18 +189,18 @@ class BaseModel(AbstractModel):
             for layer in self._base_model.layers:
                 layer.trainable = True
 
-    def train(self, train_dir, valid_dir, epochs, freeze_base=0, numpy_data_sample=None, test_dir=None):
-
+    def train(self, train_dir, valid_dir, epochs, freeze_base=0, train_data_sample=None, 
+              test_dir=None, test_data_sample=None):
+        print("TRAINING....")
         self._prepare_model()
-
         self._model.summary()
 
         callbacks = [self._get_checkpointer(10), self._get_logger(),
                      self._get_reducer(), self._get_stoper()]
 
         generator = self._get_train_generator()
-        if  numpy_data_sample is not None:
-            generator.fit(numpy_data_sample)
+        if  train_data_sample is not None:
+            generator.fit(train_data_sample)
 
         train_generator = generator.flow_from_directory(train_dir,
                                                         target_size=self._input_size,
@@ -212,13 +221,14 @@ class BaseModel(AbstractModel):
 
         self._freeze_base_model()
         self._fit_step(self._lr, int(epochs * freeze_base), train_generator, valid_generator, callbacks)
+        self.save()
 
         self._unfreeze_base_model()
-        self._fit_step(self._lr, int(epochs - (1 - freeze_base)), train_generator, valid_generator, callbacks)
+        self._fit_step(self._lr, int(epochs * (1 - freeze_base)), train_generator, valid_generator, callbacks)
         self.save()
 
         if test_dir is not None:
-            self.evaluate(test_dir)
+            self.evaluate(test_dir, test_data_sample)
 
     def _compile(self, lr=0.01):
         sgd = optimizers.SGD(lr=lr, decay=1e-6, momentum=0.9, nesterov=True)
@@ -230,6 +240,7 @@ class BaseModel(AbstractModel):
     def _fit_step(self, lr, epochs, train_generator, valid_generator, callbacks):
 
         self._compile(lr)
+        self._load_weights()
 
         self._model.fit_generator(train_generator,
                                   epochs=epochs, verbose=1,
@@ -238,10 +249,16 @@ class BaseModel(AbstractModel):
                                   validation_steps=int(0.1 * self._epoch_images) / self._batch_size,
                                   callbacks=callbacks)
 
-    def evaluate(self, test_dir, test_images=10000):
+    def evaluate(self, test_dir, data_sample=None, test_images=10000):
+        
+        self._prepare_model()
         self._compile()
+        self._load_weights()
 
         generator = self._get_test_generator()
+        if  data_sample is not None:
+            generator.fit(data_sample)
+
         test_generator = generator.flow_from_directory(test_dir,
                                                        target_size=self._input_size,
                                                        batch_size=self._batch_size,
@@ -285,9 +302,6 @@ class VGG16Model(BaseModel):
                             kernel_initializer=RandomNormal(mean=0.0, stddev=0.001))(x)
 
         self._model = Model(input=self._base_model.input, output=predictions)
-
-        if self._pretrained is not None:
-            self._model.load_weights(self._pretrained, by_name=True)
 
 
 
