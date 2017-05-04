@@ -30,11 +30,11 @@ class ClassificationType(Enum):
 class AbstractModel(metaclass=ABCMeta):
 
     @abstractmethod
-    def train(self):
+    def train(self, train_data, valid_data, epochs, freeze_base, test_data):
         pass
 
     @abstractmethod
-    def evaluate(self):
+    def evaluate(self, test_data, test_images):
         pass
 
     @abstractmethod
@@ -156,19 +156,43 @@ class BaseModel(AbstractModel):
                                        patience=patience,
                                        min_lr=min_lr)
 
-    def _get_train_generator(self):
-        return  ImageDataGenerator(featurewise_center=True,
-                                   samplewise_center=False,
-                                   featurewise_std_normalization=False,
-                                   samplewise_std_normalization=False,
-                                   zca_whitening=False,
-                                   rotation_range=0,
-                                   width_shift_range=0.1,
-                                   height_shift_range=0.1,
-                                   fill_mode='nearest')
+    def _get_train_generator(self, data):
+        generator = ImageDataGenerator(featurewise_center=True,
+                                       samplewise_center=False,
+                                       featurewise_std_normalization=False,
+                                       samplewise_std_normalization=False,
+                                       zca_whitening=False,
+                                       rotation_range=0,
+                                       width_shift_range=0.1,
+                                       height_shift_range=0.1,
+                                       fill_mode='nearest')
+        data_dir, data_sample = data
+        if data_sample is not None:
+            generator.fit(data_sample)
 
-    def _get_test_generator(self):
-        return ImageDataGenerator(featurewise_center=True)
+        return generator.flow_from_directory(data_dir,
+                                            target_size=self._input_size,
+                                            batch_size=self._batch_size,
+                                            class_mode='binary' if self.n_outputs == 1 else "categorical",
+                                            shuffle=True,
+                                            color_mode="grayscale" if self._gray else 'rgb')
+                                            # save_to_dir='data/gen_img',
+                                            # save_prefix='img',
+                                            # save_format='png')
+
+    def _get_test_generator(self, data):
+        generator = ImageDataGenerator(featurewise_center=True)
+        data_dir, data_sample = data
+        if data_sample is not None:
+            generator.fit(data_sample)
+
+        return generator.flow_from_directory(data_dir,
+                                             target_size=self._input_size,
+                                             batch_size=self._batch_size,
+                                             class_mode='binary' if self.n_outputs == 1 else "categorical",
+                                             shuffle=True,
+                                             color_mode="grayscale" if self._gray else 'rgb')
+
 
     def clear_session(self):
         K.clear_session()
@@ -189,35 +213,18 @@ class BaseModel(AbstractModel):
             for layer in self._base_model.layers:
                 layer.trainable = True
 
-    def train(self, train_dir, valid_dir, epochs, freeze_base=0, train_data_sample=None, 
-              test_dir=None, test_data_sample=None):
+    def train(self, train_data, valid_data, epochs, freeze_base=0, test_data=None):
         print("TRAINING....")
+
         self._prepare_model()
         self._model.summary()
 
         callbacks = [self._get_checkpointer(10), self._get_logger(),
                      self._get_reducer(), self._get_stoper()]
 
-        generator = self._get_train_generator()
-        if  train_data_sample is not None:
-            generator.fit(train_data_sample)
+        train_generator = self._get_train_generator(train_data)
 
-        train_generator = generator.flow_from_directory(train_dir,
-                                                        target_size=self._input_size,
-                                                        batch_size=self._batch_size,
-                                                        class_mode='binary' if self.n_outputs == 1 else "categorical",
-                                                        shuffle=True,
-                                                        color_mode="grayscale" if self._gray else 'rgb')
-                                                        #save_to_dir='data/gen_img',
-                                                        #save_prefix='img',
-                                                        #save_format='png')
-
-        valid_generator = generator.flow_from_directory(valid_dir,
-                                                        target_size=self._input_size,
-                                                        batch_size=self._batch_size,
-                                                        class_mode='binary' if self.n_outputs == 1 else "categorical",
-                                                        shuffle=True,
-                                                        color_mode="grayscale" if self._gray else 'rgb')
+        valid_generator = self._get_train_generator(valid_data)
 
         self._freeze_base_model()
         self._fit_step(self._lr, int(epochs * freeze_base), train_generator, valid_generator, callbacks)
@@ -227,8 +234,8 @@ class BaseModel(AbstractModel):
         self._fit_step(self._lr, int(epochs * (1 - freeze_base)), train_generator, valid_generator, callbacks)
         self.save()
 
-        if test_dir is not None:
-            self.evaluate(test_dir, test_data_sample)
+        if test_data is not None:
+            self.evaluate(test_data)
 
     def _compile(self, lr=0.01):
         sgd = optimizers.SGD(lr=lr, decay=1e-6, momentum=0.9, nesterov=True)
@@ -249,22 +256,14 @@ class BaseModel(AbstractModel):
                                   validation_steps=int(0.1 * self._epoch_images) / self._batch_size,
                                   callbacks=callbacks)
 
-    def evaluate(self, test_dir, data_sample=None, test_images=10000):
+    def evaluate(self, test_data, test_images=10000):
         
         self._prepare_model()
         self._compile()
         self._load_weights()
 
-        generator = self._get_test_generator()
-        if  data_sample is not None:
-            generator.fit(data_sample)
+        test_generator = self._get_test_generator(test_data)
 
-        test_generator = generator.flow_from_directory(test_dir,
-                                                       target_size=self._input_size,
-                                                       batch_size=self._batch_size,
-                                                       class_mode='binary' if self.n_outputs == 1 else "categorical",
-                                                       shuffle=True,
-                                                       color_mode="grayscale" if self._gray else 'rgb')
         scores = self._model.evaluate_generator(test_generator,
                                        steps=test_images/self._batch_size)
 

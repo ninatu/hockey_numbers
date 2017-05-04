@@ -27,9 +27,7 @@ def train_model(args):
     train_dset = datasets[args.dset]()
     if not train_dset.is_prepared:
         train_dset.prepare(type=args.ctype, test_per=0.2)
-    
 
-    
     if args.test_dset is not None:
         test_dset = datasets[args.test_dset]()
         if not test_dset.is_prepared:
@@ -44,16 +42,25 @@ def train_model(args):
     else:
         valid_dset = None
 
-    model.start_session()
+    shape = (args.height, args.width, 1 if args.gray else 3)
+    train_data = train_dset.get_train(shape)
+    valid_data = valid_dset.get_train(shape) if valid_dset is not None else train_dset.get_test(shape)
+    test_data = test_dset.get_test(shape) if test_dset is not None else None
 
-    model.train(train_dir=train_dset.train_directory,
-                valid_dir=valid_dset.train_directory if valid_dset is not None else train_dset.test_directory,
+    print("GET DATA: ")
+    print("TRAIN DATA: path: {}, sample shape: {}".format(train_data[0], train_data[1].shape))
+    print("VALID DATA: path: {}, sample shape: {}".format(valid_data[0], valid_data[1].shape))
+    if test_data is not None:
+        print("TEST DATA: path: {}, sample shape: {}".format(test_data[0], test_data[1].shape))
+
+    model.start_session()
+    model.train(train_data=train_data,
+                valid_data=valid_data,
                 epochs=args.epochs,
                 freeze_base=args.freeze,
-                train_data_sample=train_dset.numpy_train_sample((args.height, args.width, 1 if args.gray else 3)),
-                test_dir=None if test_dset is None else test_dset.test_directory)
-
+                test_data=test_data)
     model.clear_session()
+
 
 def evaluate_model(args):
     model = models[args.model](args.ctype)
@@ -65,13 +72,12 @@ def evaluate_model(args):
     if not test_dset.is_prepared:
         test_dset.prepare(type=args.ctype, test_per=1)
 
+    shape = (args.height, args.width, 1 if args.gray else 3)
+    test_data = test_dset.get_test(shape)
+
     model.start_session()
-
-    model.evaluate(test_dset.test_directory, test_images=args.count)
-
+    model.evaluate(test_data, test_images=args.count)
     model.clear_session()
-
-
 
 
 def main():
@@ -79,7 +85,7 @@ def main():
 
     subparsers = parser.add_subparsers(title='actions')
 
-    dset_parser = subparsers.add_parser('dset_prepare', help='prepare dataset for train and test')
+    dset_parser = subparsers.add_parser('prepare', help='prepare dataset for train and test')
     dset_parser.add_argument('dset', type=DatasetType, help='dataset type')
     dset_parser.add_argument('--ctype', type=ClassificationType, default=ClassificationType.NUMBERS,
                              help='prepare for classification type')

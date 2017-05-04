@@ -22,16 +22,14 @@ def get_files(path):
     files = os.listdir(path)
     return list(filter(lambda x: osp.isfile(osp.join(path, x)), files))
 
-"""
-def move_dir2dir(indir, outdir, count=None):
-    files = os.listdir(indir)
-    if count:
-        random.shuffle(files)
-        files = files[:count]
 
-    for file in files:
-        os.rename(osp.join(indir, file), osp.join(outdir, file))
-"""
+def recursively_get_files(path):
+    files = []
+    for root_dir, subdirs, subfiles in os.walk(path):
+        relpath = osp.relpath(root_dir, path)
+        for subfile in subfiles:
+            files.append(osp.join(relpath, subfile))
+    return files
 
 
 def unlink_files_in_dir(indir):
@@ -47,7 +45,6 @@ def link_files_to_dir(indir, outdir, count=None):
         files = files[:count]
     for file in files:
         os.link(osp.join(indir, file), osp.join(outdir, file))
-
 
 
 class BaseDataset:
@@ -66,32 +63,25 @@ class BaseDataset:
     def is_prepared(self):
         return osp.exists(self._train_path)
 
-    @property
-    def train_directory(self):
-        return self._train_path
+    def get_train(self, shape):
+        return (self._train_path, self._get_sample(self._train_path, shape))
 
-    @property
-    def test_directory(self):
-        return self._test_path
+    def get_test(self, shape):
+        return (self._test_path, self._get_sample(self._test_path, shape))
 
-    def numpy_sample(self, shape, max_count=5000):
-
-        classes = get_dirs(self._train_path)
-        count_per_class = int(max_count / len(classes))
+    def _get_sample(self, path, shape, max_count=5000):
+        files = recursively_get_files(path)
+        random.shuffle(files)
+        files = files[:max_count]
 
         sample = []
-        for _class in classes:
-            train_dir = osp.join(self._train_path, _class)
-            test_dir = osp.join(self._test_path, _class)
-            files = [osp.join(train_dir, file) for file in get_files(train_dir)]
-            files.extend([osp.join(test_dir, file) for file in get_files(test_dir)])
-            random.shuffle(files)
-            for file in files[:count_per_class]:
-                img = scipy.misc.imread(file, mode='RGB' if shape[2] == 3 else 'L')
-                img = scipy.misc.imresize(img, (shape[0], shape[1]))
-                if shape[2] == 1:
-                    img = img[:, :, np.newaxis]
-                sample.append(img)
+        for file in files:
+            file = osp.join(path, file)
+            img = scipy.misc.imread(file, mode='RGB' if shape[2] == 3 else 'L')
+            img = scipy.misc.imresize(img, (shape[0], shape[1]))
+            if shape[2] == 1:
+                img = img[:, :, np.newaxis]
+            sample.append(img)
         return np.array(sample)
 
     def prepare(self, type, test_per=0.2):
