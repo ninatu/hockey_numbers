@@ -207,6 +207,12 @@ class SynthText(BaseDataset):
     def __init__(self):
         super(SynthText, self).__init__(SynthText.DATA_PATH)
 
+class SynthTextClean(BaseDataset):
+    DATA_PATH = 'synth_text_clean'
+
+    def __init__(self):
+        super(SynthTextClean, self).__init__(SynthTextClean.DATA_PATH)
+
 
 class SynthAll(BaseDataset):
     DATA_PATH = 'synth_all'
@@ -272,6 +278,7 @@ class RealCropCopy(BaseDataset):
 
 class DatasetType(Enum):
     synth_text = 'synth_text'
+    synth_text_clean = 'synth_text_clean'
     synth_number = 'synth_number'
     synth = 'synth_all'
     real = 'real'
@@ -284,6 +291,7 @@ class DatasetType(Enum):
     real_crop_copy = 'real_crop_copy'
 
 datasets = {DatasetType.synth_text: SynthText,
+            DatasetType.synth_text_clean: SynthTextClean,
             DatasetType.synth_number: SynthNumber,
             DatasetType.synth: SynthAll,
             DatasetType.synth_text_crop: SynthTextCrop,
