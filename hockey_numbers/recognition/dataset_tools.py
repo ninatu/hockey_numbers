@@ -100,8 +100,9 @@ def balance(args):
 
 
 def crop_square(img):
+    h = img.shape[0]
     w = img.shape[1]
-    return img[:w]
+    return img[int(h/6):int(4*h/6)]
 
 
 def crop(args):

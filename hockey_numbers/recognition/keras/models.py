@@ -215,7 +215,7 @@ class BaseModel(AbstractModel):
                                              target_size=self._input_size,
                                              batch_size=self._batch_size,
                                              class_mode='binary' if self.n_outputs == 1 else "categorical",
-                                             shuffle=True,
+                                             shuffle=shuffle,
                                              color_mode="grayscale" if self._gray else 'rgb')
 
 
@@ -298,12 +298,20 @@ class BaseModel(AbstractModel):
         for metric, score in zip(self._model.metrics_names, scores):
             print("{} = {}".format(metric, score))
 
-    def predict(self, img):
-        pass
-        #self._save_test_results(dset.name, scores)
+    def predict(self, test_data, test_images, path_to_save):
+        self._prepare_model()
+        self._compile()
+        self._load_weights()
+        test_generator = self._get_test_generator(test_data, shuffle=False)
 
-
-
+        predict = self._model.predict_generator(test_generator,
+                                                steps=np.ceil(float(test_images) / self._batch_size))
+        ans = dict()
+        ans['class_indices'] =  test_generator.class_indices
+        ans['filenames'] = test_generator.filenames
+        ans['predict'] = predict
+        with open(path_to_save, 'w') as fout:
+            json.dump(ans, fout)
 
 
 class VGG16Model(BaseModel):
