@@ -183,7 +183,7 @@ class BaseModel(AbstractModel):
     def _get_train_generator(self, data):
         generator = ImageDataGenerator(featurewise_center=True,
                                        samplewise_center=False,
-                                       featurewise_std_normalization=True,
+                                       #featurewise_std_normalization=True,
                                        samplewise_std_normalization=False,
                                        zca_whitening=False,
                                        rotation_range=10,
@@ -205,8 +205,8 @@ class BaseModel(AbstractModel):
                                             # save_format='png')
 
     def _get_test_generator(self, data):
-        generator = ImageDataGenerator(featurewise_center=True,
-                                       featurewise_std_normalization=True)
+        generator = ImageDataGenerator(featurewise_center=True)
+                                       #featurewise_std_normalization=True)
         data_dir, data_sample = data
         if data_sample is not None:
             generator.fit(data_sample)
@@ -317,11 +317,11 @@ class VGG16Model(BaseModel):
         self._base_model = VGG16(weights='imagenet', include_top=False, input_shape=self.input_shape)
         x = self._base_model.output
         x = GlobalAveragePooling2D(name='vgg16_gap1')(x)
-        #x = BatchNormalization(name='vgg16_bn1')(x)
-        x = Dense(128, activation='relu',
-                  kernel_initializer=RandomNormal(mean=0.0, stddev=0.001),
-                  kernel_regularizer=regularizers.l2(0.01),
-                  name='vgg16_dense1')(x)
+        x = BatchNormalization(name='vgg16_bn1')(x)
+        #x = Dense(128, activation='relu',
+        #          kernel_initializer=RandomNormal(mean=0.0, stddev=0.001),
+        #          kernel_regularizer=regularizers.l2(0.01),
+        #          name='vgg16_dense1')(x)
         #x = BatchNormalization(name='vgg16_bn1')(x)
         #x = Dropout(0.7, name='vgg16_drop1')(x)
         #x = Dense(1024, activation='relu', kernel_initializer=RandomNormal(mean=0.0, stddev=0.01),
@@ -331,7 +331,7 @@ class VGG16Model(BaseModel):
         predictions = Dense(n_outputs,
                             activation='softmax' if n_outputs > 1 else 'sigmoid',
                             kernel_regularizer=regularizers.l2(0.01),
-                            kernel_initializer=RandomNormal(mean=0.0, stddev=0.001),
+                            #kernel_initializer=RandomNormal(mean=0.0, stddev=0.001),
                             name='vgg16_softmax')(x)#+ self._type.value)(x)
 
 
