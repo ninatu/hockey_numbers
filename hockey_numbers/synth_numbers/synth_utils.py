@@ -105,8 +105,8 @@ class NumberRender:
         # self._alpha_number = 0.6
         self._min_shift = 0.10
         self._max_shift = 0.25
-        self._min_scale = 0.5
-        self._max_scale = 0.7
+        self._min_scale = 0.7
+        self._max_scale = 1
         self._color_h = 3
         self._max_attempt = 15
 
@@ -201,8 +201,8 @@ class NumberRender:
         text_mask, text = res
 
         text_mask = self.sample_transform(text_mask)
-        if len(text) > 1:
-            text_mask = self.correct_orient(text_mask, text, mask_player)
+        #if len(text) > 1:
+        #    text_mask = self.correct_orient(text_mask, text, mask_player)
 
         res_img, (x, y, w, h) = self.place_text(text_mask, text, img_player, mask_player)
         if res_img is not None:
