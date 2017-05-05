@@ -21,7 +21,7 @@ from keras import backend as K
 from keras import regularizers
 import tensorflow as tf
 
-MODEL_DATA_DIR = 'models'
+MODEL_DATA_DIR = '/home/GRAPHICS2/19n_tul/models'
 
 
 class ClassificationType(Enum):
@@ -183,7 +183,7 @@ class BaseModel(AbstractModel):
     def _get_train_generator(self, data):
         generator = ImageDataGenerator(featurewise_center=True,
                                        samplewise_center=False,
-                                       #featurewise_std_normalization=True,
+                                       featurewise_std_normalization=True,
                                        samplewise_std_normalization=False,
                                        zca_whitening=False,
                                        rotation_range=10,
@@ -206,7 +206,7 @@ class BaseModel(AbstractModel):
 
     def _get_test_generator(self, data):
         generator = ImageDataGenerator(featurewise_center=True,
-                                       #featurewise_std_normalization=True)
+                                       featurewise_std_normalization=True)
         data_dir, data_sample = data
         if data_sample is not None:
             generator.fit(data_sample)
