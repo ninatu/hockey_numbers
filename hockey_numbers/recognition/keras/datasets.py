@@ -10,6 +10,7 @@ from models import ClassificationType
 
 #DATA_FOLDER = 'data'
 DIR_NOT_NUMBER = 'not_number'
+DIR_NOT_NUMBER_CROP = 'not_number_crop'
 DATA_FOLDER = '/home/GRAPHICS2/19n_tul/data'
 
 
@@ -48,12 +49,16 @@ def link_files_to_dir(indir, outdir, count=None):
 
 
 class BaseDataset:
-    def __init__(self, dataset_dir):
+    def __init__(self, dataset_dir, type=None):
         self._name = dataset_dir
         self._data_path = osp.join(DATA_FOLDER, dataset_dir)
         self._train_path = osp.join(self._data_path, 'train')
         self._test_path = osp.join(self._data_path, 'test')
         self._img_path = osp.join(self._data_path, 'img')
+        if type == 'crop':
+            self._not_player_path = osp.join(DATA_FOLDER, DIR_NOT_NUMBER_CROP)
+        else:
+            self._not_player_path = osp.join(DATA_FOLDER, DIR_NOT_NUMBER)
 
     @property
     def name(self):
@@ -106,8 +111,8 @@ class BaseDataset:
                 os.mkdir(test_number_path)
                 self._split(train_number_path, test_number_path, img_number_path, test_per)
         elif type == ClassificationType.BINARY:
-            train_not_number_dir = osp.join(DATA_FOLDER, DIR_NOT_NUMBER, 'train')
-            test_not_number_dir = osp.join(DATA_FOLDER, DIR_NOT_NUMBER, 'test')
+            train_not_number_dir = osp.join(self._not_player_path, 'train')
+            test_not_number_dir = osp.join(self._not_player_path, 'test')
 
             count_class_0 = len(get_files(train_not_number_dir)) + len(get_files(test_not_number_dir))
             count_class_1 = 0
@@ -146,7 +151,10 @@ class BaseDataset:
 
     def _clean_train_test(self):
         classes = get_dirs(self._train_path)
-
+        print(self._train_path)
+        print(self._test_path)
+        print(self._img_path)
+        print(self._not_player_path)
         # if train is prepared for binary classification
         if len(classes) == 2:
             unlink_files_in_dir(osp.join(self._train_path, '2'))
@@ -218,28 +226,48 @@ class SynthNumberCrop(BaseDataset):
     DATA_PATH = 'synth_number_crop'
 
     def __init__(self):
-        super(SynthNumberCrop, self).__init__(SynthNumberCrop.DATA_PATH)
+        super(SynthNumberCrop, self).__init__(SynthNumberCrop.DATA_PATH, 'crop')
 
 
 class SynthTextCrop(BaseDataset):
     DATA_PATH = 'synth_text_crop'
 
     def __init__(self):
-        super(SynthTextCrop, self).__init__(SynthTextCrop.DATA_PATH)
+        super(SynthTextCrop, self).__init__(SynthTextCrop.DATA_PATH, 'crop')
 
 
 class SynthCrop(BaseDataset):
     DATA_PATH = 'synth_crop'
 
     def __init__(self):
-        super(SynthCrop, self).__init__(SynthCrop.DATA_PATH)
+        super(SynthCrop, self).__init__(SynthCrop.DATA_PATH, 'crop')
 
 
 class RealCrop(BaseDataset):
     DATA_PATH = 'real_crop'
 
     def __init__(self):
-        super(RealCrop, self).__init__(RealCrop.DATA_PATH)
+        super(RealCrop, self).__init__(RealCrop.DATA_PATH, 'crop')
+
+class SynthTextCropCopy(BaseDataset):
+    DATA_PATH = 'synth_text_crop_copy'
+
+    def __init__(self):
+        super(SynthTextCropCopy, self).__init__(SynthTextCropCopy.DATA_PATH, 'crop')
+
+
+class SynthCropCopy(BaseDataset):
+    DATA_PATH = 'synth_crop_copy'
+
+    def __init__(self):
+        super(SynthCropCopy, self).__init__(SynthCropCopy.DATA_PATH, 'crop')
+
+
+class RealCropCopy(BaseDataset):
+    DATA_PATH = 'real_crop_copy'
+
+    def __init__(self):
+        super(RealCropCopy, self).__init__(RealCropCopy.DATA_PATH, 'crop')
 
 
 class DatasetType(Enum):
@@ -251,7 +279,9 @@ class DatasetType(Enum):
     synth_number_crop = 'synth_number_crop'
     synth_crop = 'synth_crop'
     real_crop = 'real_crop'
-
+    synth_text_crop_copy = 'synth_text_crop_copy'
+    synth_crop_copy = 'synth_crop_copy'
+    real_crop_copy = 'real_crop_copy'
 
 datasets = {DatasetType.synth_text: SynthText,
             DatasetType.synth_number: SynthNumber,
@@ -260,4 +290,7 @@ datasets = {DatasetType.synth_text: SynthText,
             DatasetType.synth_number_crop:SynthNumberCrop,
             DatasetType.synth_crop: SynthCrop,
             DatasetType.real: RealDset,
-            DatasetType.real_crop: RealCrop}
+            DatasetType.real_crop: RealCrop,
+            DatasetType.real_crop_copy: RealCropCopy,
+            DatasetType.synth_text_crop_copy: SynthTextCropCopy,
+            DatasetType.synth_crop_copy: SynthCropCopy}

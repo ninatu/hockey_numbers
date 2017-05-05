@@ -104,7 +104,7 @@ def main():
     train_parser.add_argument('--lr', type=float, required=False, default=DEFAULT_LR, help='learning rate')
     train_parser.add_argument('-e', '--epochs', type=int, default=DEFAULT_EPOCHS, help='count train epoch')
     train_parser.add_argument('--images_per_epoch', type=int, default=DEFAULT_EPOCH_IMAGES, help='images per one epoch')
-    train_parser.add_argument('--freeze', type=int, default=DEFAULT_FREEZE_BASE_EPOCH,
+    train_parser.add_argument('--freeze', type=float, default=DEFAULT_FREEZE_BASE_EPOCH,
                               help='persent of count epoch with freeze base model layer')
     train_parser.add_argument('--batch_size', type=int, default=DEFAULT_BATCH_SIZE, help='batch_size')
     train_parser.add_argument('--test_dset', type=DatasetType, default=None, help='dataset type for test')
