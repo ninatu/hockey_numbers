@@ -167,13 +167,13 @@ class BaseModel(AbstractModel):
         return CSVLogger(filename=log_path,
                                            append=True)
 
-    def _get_stoper(self, min_delta=0.001, patience=10):
+    def _get_stoper(self, min_delta=0.001, patience=20):
         return EarlyStopping(monitor='val_loss',
                              min_delta=min_delta,
                              patience=patience)
 
 
-    def _get_reducer(self, factor=0.1, patience=5, min_lr=0.00001):
+    def _get_reducer(self, factor=np.sqrt(0.1), patience=5, min_lr=0.00001):
         return ReduceLROnPlateau(monitor='val_loss',
                                        factor=factor,
                                        verbose=1,
@@ -363,42 +363,43 @@ class GerkeModel(BaseModel):
 
         input = Input(shape=self.input_shape)
         x = input
-        x = Conv2D(filters=16, kernel_size=(5, 5), strides=(1, 1), padding='same',
-                   activation='tanh', #kernel_initializer=RandomNormal(mean=0.0, stddev=0.01),
+        x = Conv2D(filters=32, kernel_size=(5, 5), strides=(1, 1), padding='same',
+                   activation='relu', #kernel_initializer=RandomNormal(mean=0.0, stddev=0.01),
                    name='gerke_conv1')(x)
         x = MaxPooling2D(pool_size=(2, 2), strides=(2, 2), padding='same',
                          name='gerke_max1')(x)
 
-        x = BatchNormalization(name='gerke_bn1')(x)
+        #x = BatchNormalization(name='gerke_bn1')(x)
         
 
-        x = Conv2D(filters=30, kernel_size=(7, 7), strides=(1, 1), padding='same',
-                   activation='tanh', #kernel_initializer=RandomNormal(mean=0.0, stddev=0.01),
+        x = Conv2D(filters=60, kernel_size=(7, 7), strides=(1, 1), padding='same',
+                   activation='relu', #kernel_initializer=RandomNormal(mean=0.0, stddev=0.01),
                    name='gerke_conv2')(x)
         x = MaxPooling2D(pool_size=(3, 3), strides=(3, 3), padding='same',
                          name='gerke_max2')(x)    
-        x = BatchNormalization(name='gerke_bn2')(x)
+        #x = BatchNormalization(name='gerke_bn2')(x)
         
         
-        x = Conv2D(filters=50, kernel_size=(3, 3), strides=(1, 1), padding='same',
-                   activation='tanh', # kernel_initializer=RandomNormal(mean=0.0, stddev=0.01),
+        x = Conv2D(filters=100, kernel_size=(3, 3), strides=(1, 1), padding='same',
+                   activation='relu', # kernel_initializer=RandomNormal(mean=0.0, stddev=0.01),
                    name='gerke_conv3')(x)
         x = MaxPooling2D(pool_size=(3, 3), strides=(3, 3), padding='same',
                          name='gerke_max3')(x)
 
-        #x = BatchNormalization(name='gerke_bn13')(x)
         x = GlobalAveragePooling2D(name='gerke_gap1')(x)
+        x = BatchNormalization(name='gerke_bn1')(x)
 
         #ix = Flatten(name='gerke_flat')(x)
         #x = BatchNormalization(name='gerke_bn1')(x)
-        x = Dense(34, activation='tanh', #kernel_initializer=RandomNormal(mean=0.0, stddev=0.01),
+        x = Dense(50, activation='relu', #kernel_initializer=RandomNormal(mean=0.0, stddev=0.01),
                   kernel_regularizer=regularizers.l2(0.01),
                   name='gerke_dense1')(x)
-        x = BatchNormalization(name='gerke_bn2')(x)
-        x = Dense(34, activation='relu', #kernel_initializer=RandomNormal(mean=0.0, stddev=0.01),
-                  kernel_regularizer=regularizers.l2(0.01),
-                  name='gerke_dense2')(x)
+        #x = BatchNormalization(name='gerke_bn1.5')(x)
+        #x = Dense(34, activation='relu', #kernel_initializer=RandomNormal(mean=0.0, stddev=0.01),
+        #          kernel_regularizer=regularizers.l2(0.01),
+        #          name='gerke_dense2')(x)
 
+        x = BatchNormalization(name='gerke_bn2')(x)
         predictions = Dense(self.n_outputs,
                   activation='softmax' if self.n_outputs > 1 else 'sigmoid',
                   #kernel_initializer=#RandomNormal(mean=0.0, stddev=0.01),
