@@ -284,7 +284,7 @@ class BaseModel(AbstractModel):
                                   validation_steps=int(0.1 * self._epoch_images) / self._batch_size,
                                   callbacks=callbacks)
 
-    def evaluate(self, test_data, test_images=10000):
+    def evaluate(self, test_data, test_images=1000):
         
         self._prepare_model()
         self._compile()
@@ -369,26 +369,35 @@ class GerkeModel(BaseModel):
         x = MaxPooling2D(pool_size=(2, 2), strides=(2, 2), padding='same',
                          name='gerke_max1')(x)
 
+        x = BatchNormalization(name='gerke_bn1')(x)
+        
+
         x = Conv2D(filters=30, kernel_size=(7, 7), strides=(1, 1), padding='same',
                    activation='tanh', #kernel_initializer=RandomNormal(mean=0.0, stddev=0.01),
                    name='gerke_conv2')(x)
         x = MaxPooling2D(pool_size=(3, 3), strides=(3, 3), padding='same',
-                         name='gerke_max2')(x)
-
+                         name='gerke_max2')(x)    
+        x = BatchNormalization(name='gerke_bn2')(x)
+        
+        
         x = Conv2D(filters=50, kernel_size=(3, 3), strides=(1, 1), padding='same',
                    activation='tanh', # kernel_initializer=RandomNormal(mean=0.0, stddev=0.01),
                    name='gerke_conv3')(x)
         x = MaxPooling2D(pool_size=(3, 3), strides=(3, 3), padding='same',
                          name='gerke_max3')(x)
 
-        x = Flatten(name='gerke_flat')(x)
-        x = BatchNormalization(name='gerke_bn1')(x)
-        x = Dense(100, activation='tanh', #kernel_initializer=RandomNormal(mean=0.0, stddev=0.01),
+        #x = BatchNormalization(name='gerke_bn13')(x)
+        x = GlobalAveragePooling2D(name='gerke_gap1')(x)
+
+        #ix = Flatten(name='gerke_flat')(x)
+        #x = BatchNormalization(name='gerke_bn1')(x)
+        x = Dense(34, activation='tanh', #kernel_initializer=RandomNormal(mean=0.0, stddev=0.01),
                   kernel_regularizer=regularizers.l2(0.01),
                   name='gerke_dense1')(x)
         x = BatchNormalization(name='gerke_bn2')(x)
-        #x = Dense(50, activation='relu', kernel_initializer=RandomNormal(mean=0.0, stddev=0.01),
-        #          name='gerke_dense2')(x)
+        x = Dense(34, activation='relu', #kernel_initializer=RandomNormal(mean=0.0, stddev=0.01),
+                  kernel_regularizer=regularizers.l2(0.01),
+                  name='gerke_dense2')(x)
 
         predictions = Dense(self.n_outputs,
                   activation='softmax' if self.n_outputs > 1 else 'sigmoid',
