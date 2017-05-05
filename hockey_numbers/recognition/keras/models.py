@@ -5,6 +5,7 @@ import datetime
 import os.path as osp
 import numpy as np
 import sys
+import json
 
 from keras.applications.vgg16 import VGG16
 from keras.models import Model
@@ -17,6 +18,7 @@ from keras.callbacks import ReduceLROnPlateau, CSVLogger, EarlyStopping, TensorB
 from keras.initializers import RandomNormal
 from keras.preprocessing.image import ImageDataGenerator
 from keras import backend as K
+from keras import regularizers
 import tensorflow as tf
 
 MODEL_DATA_DIR = 'models'
@@ -124,17 +126,39 @@ class BaseModel(AbstractModel):
         with open(f_path, 'w') as fout:
             for metric, score in zip(self._model.metrics_names, scores):
                 fout.write("{} = {}\n".format(metric, score))
-
+    def _save_params(self, train_data, valid_data, epochs, freeze_base, test_data):
+        params = {}
+        params['base_name'] = self._base_name
+        params['name'] = self._name
+        params['epoch_images'] = self._epoch_images
+        params['batch_size'] = self._batch_size
+        params['lr'] = self._lr
+        params['epochs'] = epochs
+        params['train_data'] = train_data[0]
+        params['valid_data'] = valid_data[0]
+        params['test_data'] = test_data[0] if test_data is not None else None
+        params['input_shape'] = self.input_shape
+        params['pretrained'] = self._pretrained
+        params['freeze'] = freeze_base
+        params['_model'] = str(self._model.to_json())
+        f_path = osp.join(MODEL_DATA_DIR, '{}_params.txt'.format(self.name))
+        with open(f_path, 'w') as fout:
+            json.dump(params, fout, indent=4, sort_keys=True) 
+         
     def _get_checkpointer(self, period):
         if self.type == ClassificationType.NUMBERS:
-            checkpoint_path = self.name + '_weights.{epoch:02d}-{val_acc:.2f}-{val_loss:.2f}.hdf5'
+            checkpoint_path = self.name + '_weights.{epoch:02d}-{val_categorical_accuracy:.2f}-{val_loss:.2f}.hdf5'
         else:
             checkpoint_path = self.name + '_weights.{epoch:02d}-{val_binary_accuracy:.2f}-{val_loss:.2f}.hdf5'
         checkpoint_path = osp.join(MODEL_DATA_DIR, 'checkpoints', checkpoint_path)
         return ModelCheckpoint(filepath=checkpoint_path,
+                               save_best_only=True, 
                                                        monitor='val_loss',
                                                        verbose=1,
                                                        period=period)
+    def _get_tensorboard(self):
+        log_dir = osp.join(MODEL_DATA_DIR, 'logs')
+        return TensorBoard(log_dir=log_dir, histogram_freq=0, write_graph=False, write_images=True)
 
     def _get_logger(self):
         log_path = self.name + '_log.csv'
@@ -218,17 +242,20 @@ class BaseModel(AbstractModel):
 
         self._prepare_model()
         self._model.summary()
+        self._save_params(train_data, valid_data, epochs, freeze_base, test_data)
+
 
         callbacks = [self._get_checkpointer(10), self._get_logger(),
-                     self._get_reducer(), self._get_stoper()]
+                     self._get_reducer(), self._get_stoper(), self._get_tensorboard()]
 
         train_generator = self._get_train_generator(train_data)
 
         valid_generator = self._get_train_generator(valid_data)
 
-        self._freeze_base_model()
-        self._fit_step(self._lr, int(epochs * freeze_base), train_generator, valid_generator, callbacks)
-        self.save()
+        if freeze_base != 0:
+            self._freeze_base_model()
+            self._fit_step(self._lr, int(epochs * freeze_base), train_generator, valid_generator, callbacks)
+            self.save()
 
         self._unfreeze_base_model()
         self._fit_step(self._lr, int(epochs * (1 - freeze_base)), train_generator, valid_generator, callbacks)
@@ -288,17 +315,22 @@ class VGG16Model(BaseModel):
 
         self._base_model = VGG16(weights='imagenet', include_top=False, input_shape=self.input_shape)
         x = self._base_model.output
-        x = GlobalAveragePooling2D()(x)
-        x = Dense(1024, activation='relu', kernel_initializer=RandomNormal(mean=0.0, stddev=0.001),
-                  name='vgg16_dense1')(x)
+        x = GlobalAveragePooling2D('vgg16_gap1')(x)
+        x = BatchNormalization('vgg16_bn1')(x)
+        #x = Dense(128, activation='relu',
+        #          kernel_initializer=RandomNormal(mean=0.0, stddev=0.001),
+        #          name='vgg16_dense1')(x)
         #x = Dropout(0.7, name='vgg16_drop1')(x)
         #x = Dense(1024, activation='relu', kernel_initializer=RandomNormal(mean=0.0, stddev=0.01),
         #          name = 'vgg16_dense2')(x)
 
         n_outputs = self.n_outputs
         predictions = Dense(n_outputs,
-                            activation='softmax' if n_outputs > 1 else 'sigmoid', name='vgg16_softmax',
-                            kernel_initializer=RandomNormal(mean=0.0, stddev=0.001))(x)
+                            activation='softmax' if n_outputs > 1 else 'sigmoid',
+                            kernel_regularizer=regularizers.l2(0.01),
+                            #kernel_initializer=RandomNormal(mean=0.0, stddev=0.001),
+                            name='vgg16_softmax')(x)
+
 
         self._model = Model(input=self._base_model.input, output=predictions)
 
@@ -316,27 +348,29 @@ class GerkeModel(BaseModel):
         input = Input(shape=self.input_shape)
         x = input
         x = Conv2D(filters=16, kernel_size=(5, 5), strides=(1, 1), padding='same',
-                   activation='relu', #kernel_initializer=RandomNormal(mean=0.0, stddev=0.01),
+                   activation='tanh', #kernel_initializer=RandomNormal(mean=0.0, stddev=0.01),
                    name='gerke_conv1')(x)
         x = MaxPooling2D(pool_size=(2, 2), strides=(2, 2), padding='same',
                          name='gerke_max1')(x)
 
         x = Conv2D(filters=30, kernel_size=(7, 7), strides=(1, 1), padding='same',
-                   activation='relu', #kernel_initializer=RandomNormal(mean=0.0, stddev=0.01),
+                   activation='tanh', #kernel_initializer=RandomNormal(mean=0.0, stddev=0.01),
                    name='gerke_conv2')(x)
         x = MaxPooling2D(pool_size=(3, 3), strides=(3, 3), padding='same',
                          name='gerke_max2')(x)
 
         x = Conv2D(filters=50, kernel_size=(3, 3), strides=(1, 1), padding='same',
-                   activation='relu', # kernel_initializer=RandomNormal(mean=0.0, stddev=0.01),
+                   activation='tanh', # kernel_initializer=RandomNormal(mean=0.0, stddev=0.01),
                    name='gerke_conv3')(x)
         x = MaxPooling2D(pool_size=(3, 3), strides=(3, 3), padding='same',
                          name='gerke_max3')(x)
 
         x = Flatten(name='gerke_flat')(x)
-        x = Dense(50, activation='relu', #kernel_initializer=RandomNormal(mean=0.0, stddev=0.01),
+        x = BatchNormalization(name='gerke_bn1')(x)
+        x = Dense(100, activation='tanh', #kernel_initializer=RandomNormal(mean=0.0, stddev=0.01),
+                  kernel_regularizer=regularizers.l2(0.01),
                   name='gerke_dense1')(x)
-
+        x = BatchNormalization(name='gerke_bn2')(x)
         #x = Dense(50, activation='relu', kernel_initializer=RandomNormal(mean=0.0, stddev=0.01),
         #          name='gerke_dense2')(x)
 
