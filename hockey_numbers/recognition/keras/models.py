@@ -394,12 +394,12 @@ class GerkeModel(BaseModel):
         x = Dense(50, activation='relu', #kernel_initializer=RandomNormal(mean=0.0, stddev=0.01),
                   kernel_regularizer=regularizers.l2(0.01),
                   name='gerke_dense1')(x)
-        #x = BatchNormalization(name='gerke_bn1.5')(x)
-        #x = Dense(34, activation='relu', #kernel_initializer=RandomNormal(mean=0.0, stddev=0.01),
-        #          kernel_regularizer=regularizers.l2(0.01),
-        #          name='gerke_dense2')(x)
+        x = BatchNormalization(name='gerke_bn1.5')(x)
+        x = Dense(50, activation='relu', #kernel_initializer=RandomNormal(mean=0.0, stddev=0.01),
+                  kernel_regularizer=regularizers.l2(0.01),
+                  name='gerke_dense2')(x)
 
-        x = BatchNormalization(name='gerke_bn2')(x)
+        x = BatchNormalization(name='gerke_bn2.5')(x)
         predictions = Dense(self.n_outputs,
                   activation='softmax' if self.n_outputs > 1 else 'sigmoid',
                   #kernel_initializer=#RandomNormal(mean=0.0, stddev=0.01),
