@@ -24,7 +24,7 @@ def add_res_to_db(imgname,res,db):
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Genereate Synthetic Player-Number Images')
+    parser = argparse.ArgumentParser(description='Genereate Synthetic Player Number Images')
     parser.add_argument('-i', '--inputDB', required=True, type=str, nargs='?', help='input database filename')
     parser.add_argument('-o', '--outputDB', required=True, type=str, nargs='?', help='output database filename')
     parser.add_argument('-n', '--count', default=INSTANCE_PER_IMAGE, type=int, help='instance per image')

@@ -103,11 +103,11 @@ class NumberRender:
         self.colorizer = Colorize(data_dir)
 
         # self._alpha_number = 0.6
-        self._min_shift = 0.10
+        self._min_shift = 0.17
         self._max_shift = 0.25
-        self._min_scale = 0.5
-        self._max_scale = 0.7
-        self._color_h = 3
+        self._min_scale = 0.6
+        self._max_scale = 0.8
+        self._color_h = 10
         self._max_attempt = 15
 
     def sample_text(self):
@@ -134,7 +134,7 @@ class NumberRender:
     def sample_scale(self, text):
         scale = self._min_scale + (self._max_scale - self._min_scale) * random.random()
         if len(text) == 1:
-            scale /= 1.2
+            scale /= 2
         return scale
 
     def colorize(self, rgb, text_mask):
@@ -161,15 +161,17 @@ class NumberRender:
     def place_text(self, text_mask, text, img_player, mask_player):
 
         text_mask = crop(text_mask)
+        text_mask = add_pad(text_mask, pad=0.05)
         p_cntr, p_sz, p_ang = get_orient_player(mask_player)
         n_cntr, n_sz, n_ang = get_orient_text(text_mask, text)
 
         for i in range(self._max_attempt):
             alpha = min(p_sz) / max(n_sz) * self.sample_scale(text)
-            text_mask = add_pad(text_mask, pad=0.05)
 
             h, w = map(lambda x: int(x * alpha), text_mask.shape)
             sample_text = scipy.misc.imresize(text_mask, (h, w))
+            if len(text) == 1:
+                sample_text = add_pad(sample_text, pad=0.05)
 
             alpha_shift = self.sample_shift()
             p_h = p_sz[1]
@@ -199,9 +201,9 @@ class NumberRender:
         if res is None:
             return None
         text_mask, text = res
-
-        text_mask = self.sample_transform(text_mask)
-        if len(text) > 1:
+        if (len(text)> 1):
+            text_mask = self.sample_transform(text_mask)
+        if len(text) == 1:
             text_mask = self.correct_orient(text_mask, text, mask_player)
 
         res_img, (x, y, w, h) = self.place_text(text_mask, text, img_player, mask_player)

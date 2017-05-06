@@ -80,6 +80,24 @@ def evaluate_model(args):
     model.clear_session()
 
 
+def predict_model(args):
+    model = models[args.model](args.ctype)
+    model.set_params(input_size=(args.height, args.width), gray=args.gray)
+    model.set_params(pretrained=args.weights)
+    model.set_params(batch_size=args.batch_size)
+
+    test_dset = datasets[args.dset]()
+    if not test_dset.is_prepared:
+        test_dset.prepare(type=args.ctype, test_per=1)
+
+    shape = (args.height, args.width, 1 if args.gray else 3)
+    test_data = test_dset.get_test(shape)
+
+    model.start_session()
+    model.predict(test_data, test_images=args.count, path_to_save=args.outfile)
+    model.clear_session()
+    
+
 def main():
     parser = argparse.ArgumentParser()
 
@@ -124,6 +142,21 @@ def main():
     evaluate_parser.add_argument('--gray', action='store_true', default=False, help='convert to grayscale')
     evaluate_parser.add_argument('--batch_size', type=int, default=DEFAULT_BATCH_SIZE, help='batch_size')
     evaluate_parser.set_defaults(func=evaluate_model)
+
+    predict_parser = subparsers.add_parser('predict', help='predict model')
+    predict_parser.add_argument('model', type=ModelType, help='model type')
+    predict_parser.add_argument('dset', type=DatasetType, help='dataset type for predict')
+    predict_parser.add_argument('--weights', type=str, required=True, help='pretrainet weights')
+    predict_parser.add_argument('--count', type=int, required=True, help='count images for predict')
+    predict_parser.add_argument('-o', '--outfile', type=str, required=True, help='file to save results')
+
+    predict_parser.add_argument('--ctype', type=ClassificationType, required=False,
+                                 default=ClassificationType.NUMBERS, help='classification type')
+    predict_parser.add_argument('-w', '--width', type=int, required=False, default=DEFAULT_W, help='width data')
+    predict_parser.add_argument('-r', '--height', type=int, required=False, default=DEFAULT_H, help='height data')
+    predict_parser.add_argument('--gray', action='store_true', default=False, help='convert to grayscale')
+    predict_parser.add_argument('--batch_size', type=int, default=DEFAULT_BATCH_SIZE, help='batch_size')
+    predict_parser.set_defaults(func=predict_model)
 
 
     args = parser.parse_args()
