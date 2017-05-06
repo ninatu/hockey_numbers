@@ -35,16 +35,19 @@ for n in range(1, 100):
     if not os.path.exists(dirname):
         os.mkdir(dirname)
 
-
 for name, img_data in tqdm.tqdm(dataGroup.items()):
     #mark = img_data.attrs['txt'].decode('utf-8')
     mark = img_data.attrs['txt'][0].decode('utf-8')
     if int(mark) > 99:
         continue
     img = img_data.value
+    #h, w, c = img.shape
+    #if not (img_data.attrs['wordBB'][1] < h / 2).all():
+    #    continue
     dirname = os.path.join(outdir, mark)
     outpath = os.path.join(dirname, '{}.png'.format(md5_hash(img)))
     img = Image.fromarray(img)
+    #img = Image.fromarray(img[:h/2])
     img.save(outpath)
 
 
