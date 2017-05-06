@@ -329,7 +329,7 @@ class VGG16Model(BaseModel):
         else:
             model.layers[-1].outbound_nodes = []
             model.outputs = [model.layers[-1].output]
-            model.built = False
+        model.built = False
    
     def _prepare_model(self):
         if self._model is not None:
@@ -340,8 +340,13 @@ class VGG16Model(BaseModel):
         self._pop_layer(self._base_model)
         self._pop_layer(self._base_model)
         self._pop_layer(self._base_model)
+        #self._pop_layer(self._base_model)
+        #self._pop_layer(self._base_model)
+        #self._pop_layer(self._base_model)
+        #self._pop_layer(self._base_model)
 
-        x = self._base_model.output
+        x = self._base_model.layers[-1].output#self._base_model.output
+        #x = Flatten(name='vgg16_flat')
         x = GlobalAveragePooling2D(name='vgg16_gap1')(x)
         x = BatchNormalization(name='vgg16_bn1')(x)
         x = Dense(128, activation='relu',
@@ -349,7 +354,7 @@ class VGG16Model(BaseModel):
                   kernel_regularizer=regularizers.l2(0.01),
                   name='vgg16_dense1')(x)
         #x = BatchNormalization(name='vgg16_bn1')(x)
-        #x = Dropout(0.7, name='vgg16_drop1')(x)
+        #x = Dropout(0.5, name='vgg16_drop1')(x)
         #x = Dense(1024, activation='relu', kernel_initializer=RandomNormal(mean=0.0, stddev=0.01),
         #          name = 'vgg16_dense2')(x)
 
@@ -363,7 +368,7 @@ class VGG16Model(BaseModel):
 
         self._model = Model(input=self._base_model.input, output=predictions)
    
-    def _freeze_base_model(self, n=0):
+    def _freeze_base_model(self, n=4):
         print("FREEZE LAYER {}, UNFREEZ {}".format(len(self._base_model.layers)  - n, n))
         for layer in self._base_model.layers[:-n]:
             layer.trainable = False
@@ -371,7 +376,7 @@ class VGG16Model(BaseModel):
             layer.trainable = True
 
 
-    def _unfreeze_base_model(self, n=4):
+    def _unfreeze_base_model(self, n=15):
         print("FREEZE LAYER {}, UNFREEZ {}".format(len(self._base_model.layers) - n, n))
         for layer in self._base_model.layers[:-n]:
             layer.trainable = False
