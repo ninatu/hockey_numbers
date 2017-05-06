@@ -261,6 +261,13 @@ class RealCrop(BaseDataset):
     def __init__(self):
         super(RealCrop, self).__init__(RealCrop.DATA_PATH, 'crop')
 
+class RealHalf(BaseDataset):
+    DATA_PATH = 'real_half'
+
+    def __init__(self):
+        super(RealHalf, self).__init__(RealHalf.DATA_PATH, 'crop')
+
+
 class SynthTextCropCopy(BaseDataset):
     DATA_PATH = 'synth_text_crop_copy'
 
@@ -293,13 +300,14 @@ class DatasetType(Enum):
     synth_number_crop = 'synth_number_crop'
     synth_crop = 'synth_crop'
     real_crop = 'real_crop'
+    real_half = 'real_half'
     synth_text_crop_copy = 'synth_text_crop_copy'
     synth_crop_copy = 'synth_crop_copy'
     real_crop_copy = 'real_crop_copy'
 
 datasets = {DatasetType.synth_text: SynthText,
             DatasetType.synth_text_clean: SynthTextClean,
-            DatasetType.synth_text_clean_halp: SynthTextCleanHalf,
+            DatasetType.synth_text_clean_half: SynthTextCleanHalf,
             DatasetType.synth_number: SynthNumber,
             DatasetType.synth: SynthAll,
             DatasetType.synth_text_crop: SynthTextCrop,
@@ -307,6 +315,7 @@ datasets = {DatasetType.synth_text: SynthText,
             DatasetType.synth_crop: SynthCrop,
             DatasetType.real: RealDset,
             DatasetType.real_crop: RealCrop,
+            DatasetType.real_half: RealHalf,
             DatasetType.real_crop_copy: RealCropCopy,
             DatasetType.synth_text_crop_copy: SynthTextCropCopy,
             DatasetType.synth_crop_copy: SynthCropCopy}
