@@ -204,7 +204,7 @@ class BaseModel(AbstractModel):
                                             # save_prefix='img',
                                             # save_format='png')
 
-    def _get_test_generator(self, data):
+    def _get_test_generator(self, data, shuffle=False):
         generator = ImageDataGenerator(featurewise_center=True)
                                        #featurewise_std_normalization=True)
         data_dir, data_sample = data
@@ -290,7 +290,7 @@ class BaseModel(AbstractModel):
         self._compile()
         self._load_weights()
 
-        test_generator = self._get_test_generator(test_data)
+        test_generator = self._get_test_generator(test_data, shuffle=False)
 
         scores = self._model.evaluate_generator(test_generator,
                                        steps=test_images/self._batch_size)
@@ -309,7 +309,7 @@ class BaseModel(AbstractModel):
         ans = dict()
         ans['class_indices'] =  test_generator.class_indices
         ans['filenames'] = test_generator.filenames
-        ans['predict'] = predict
+        ans['predict'] = predict.tolist()
         with open(path_to_save, 'w') as fout:
             json.dump(ans, fout)
 
