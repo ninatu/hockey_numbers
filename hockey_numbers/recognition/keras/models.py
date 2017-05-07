@@ -340,12 +340,18 @@ class VGG16Model(BaseModel):
         self._pop_layer(self._base_model)
         self._pop_layer(self._base_model)
         self._pop_layer(self._base_model)
+        
         self._pop_layer(self._base_model)
         self._pop_layer(self._base_model)
         self._pop_layer(self._base_model)
         self._pop_layer(self._base_model)
 
+        #self._pop_layer(self._base_model)
+        #self._pop_layer(self._base_model)
+        #self._pop_layer(self._base_model)
+
         x = self._base_model.layers[-1].output#self._base_model.output
+
         #x = Flatten(name='vgg16_flat')
         x = GlobalAveragePooling2D(name='vgg16_gap1')(x)
         x = BatchNormalization(name='vgg16_bn1')(x)
