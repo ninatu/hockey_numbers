@@ -7,18 +7,6 @@ import random
 import tqdm
 import scipy.misc
 
-"""
-import hashlib
-import base64
-
-def md5_hash(arr):
-    arr = np.array(arr, dtype=arr.dtype)
-    md5 = hashlib.md5()
-    arr = base64.b64encode(arr)
-    md5.update(arr)
-    return md5.hexdigest()
-"""
-
 
 def get_subdirs(in_dir):
     subdirs = os.listdir(in_dir)
@@ -63,6 +51,57 @@ def merge(args):
                     shutil.move(in_path, out_path)
                 else:
                     shutil.copy(in_path, out_path)
+                   
+                    
+def sample_dataset(args):
+    in_dir = args.in_dir
+    out_dir = args.out_dir
+    count = args.count
+
+    subdirs = get_subdirs(in_dir)
+    count_per_subdir = int(count / len(subdirs))
+
+    ensure_dir(out_dir)
+    create_subdirs(out_dir, subdirs)
+
+    for subdir in tqdm.tqdm(get_subdirs(in_dir)):
+        files = get_files(osp.join(in_dir, subdir))
+        random.shuffle(files)
+        files = files[:count_per_subdir]
+        for file in files:
+            in_path = osp.join(in_dir, subdir, file)
+            out_path = osp.join(out_dir, subdir, file)
+            shutil.copy(in_path, out_path)
+
+
+def split_dataset(args):
+    in_dir = args.in_dir
+    out_dir1, out_dir2 = args.out_dirs
+
+    subdirs = get_subdirs(in_dir)
+
+    ensure_dir(out_dir1)
+    ensure_dir(out_dir2)
+    create_subdirs(out_dir1, subdirs)
+    create_subdirs(out_dir2, subdirs)
+
+    count_files = 0
+    for subdir in get_subdirs(in_dir):
+        count_files += len(get_files(osp.join(in_dir, subdir)))
+
+    random.shuffle(subdirs)
+    cur_count = 0
+    for subdir in tqdm.tqdm(subdirs):
+        files = get_files(osp.join(in_dir, subdir))
+        cur_count += len(files)
+        if cur_count < count_files / 2:
+            out_dir = out_dir1
+        else:
+            out_dir = out_dir2
+        for file in files:
+            in_path = osp.join(in_dir, subdir, file)
+            out_path = osp.join(out_dir, subdir, file)
+            shutil.copy(in_path, out_path)
 
 
 def balance(args):
@@ -100,9 +139,8 @@ def balance(args):
 
 
 def crop_square(img):
-    h = img.shape[0]
-    w = img.shape[1]
-    return img[:int(h/2)]
+    img = scipy.misc.imresize(img, (128, 64))
+    return img[14:58, 10:54]
 
 
 def crop(args):
@@ -143,6 +181,17 @@ def main():
     parser_balance.add_argument('in_dir', type=str, nargs='?', help='input dir')
     parser_balance.add_argument('out_dir', type=str, nargs='?', help='output dir')
     parser_balance.set_defaults(func=crop)
+    
+    parser_sample = subparsers.add_parser('sample', help='sample dataset')
+    parser_sample.add_argument('in_dir', type=str, nargs='?', help='input dir')
+    parser_sample.add_argument('-o', '--out_dir', type=str, required=True, help='output dir')
+    parser_sample.add_argument('-c', '--count', type=int, required=True, help='count sampled images')
+    parser_sample.set_defaults(func=sample_dataset)
+
+    parser_split = subparsers.add_parser('split', help='split dataset on two by numbers')
+    parser_split.add_argument('in_dir', type=str, nargs='?', help='input dir')
+    parser_split.add_argument('-o', '--out_dirs', type=str, nargs=2, required=True, help='two output dirs')
+    parser_split.set_defaults(func=split_dataset)
 
     args = parser.parse_args()
     args.func(args)
