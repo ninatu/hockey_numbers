@@ -7,6 +7,7 @@ import sys
 import hashlib
 import base64
 import tqdm
+import scipy.misc
 from PIL import Image
 
 
@@ -41,9 +42,11 @@ for name, img_data in tqdm.tqdm(dataGroup.items()):
     if int(mark) > 99:
         continue
     img = img_data.value
-    #h, w, c = img.shape
-    #if not (img_data.attrs['wordBB'][1] < h / 2).all():
-    #    continue
+
+    h, w, c = img.shape
+    if not (img_data.attrs['wordBB'][1] < h / 2).all():
+        continue
+
     dirname = os.path.join(outdir, mark)
     outpath = os.path.join(dirname, '{}.png'.format(md5_hash(img)))
     img = Image.fromarray(img)
