@@ -8,10 +8,10 @@ from enum import Enum
 
 from models import ClassificationType
 
-#DATA_FOLDER = 'data'
+DATA_FOLDER = 'data'
 DIR_NOT_NUMBER = 'not_number'
 DIR_NOT_NUMBER_CROP = 'not_number_crop'
-DATA_FOLDER = '/home/GRAPHICS2/19n_tul/data'
+#DATA_FOLDER = '/home/GRAPHICS2/19n_tul/data'
 
 
 def get_dirs(path):
@@ -194,128 +194,94 @@ class BaseDataset:
             os.link(src, dst)
 
 
-class SynthNumber(BaseDataset):
-    DATA_PATH = 'synth_number'
+class RISD(BaseDataset):
+    DATA_PATH = 'RISD'
 
     def __init__(self):
-        super(SynthNumber, self).__init__(SynthNumber.DATA_PATH)
+        super(RISD, self).__init__(RISD.DATA_PATH)
 
 
-class SynthText(BaseDataset):
-    DATA_PATH = 'synth_text'
-
-    def __init__(self):
-        super(SynthText, self).__init__(SynthText.DATA_PATH)
-
-class SynthTextClean(BaseDataset):
-    DATA_PATH = 'synth_text_clean'
+class NNSD(BaseDataset):
+    DATA_PATH = 'NNSD'
 
     def __init__(self):
-        super(SynthTextClean, self).__init__(SynthTextClean.DATA_PATH)
-
-class SynthTextCleanHalf(BaseDataset):
-    DATA_PATH = 'synth_text_clean_half'
-
-    def __init__(self):
-        super(SynthTextCleanHalf, self).__init__(SynthTextCleanHalf.DATA_PATH)
+        super(NNSD, self).__init__(NNSD.DATA_PATH)
 
 
-class SynthAll(BaseDataset):
-    DATA_PATH = 'synth_all'
+class NaiveSD(BaseDataset):
+    DATA_PATH = 'NaiveSD'
 
     def __init__(self):
-        super(SynthAll, self).__init__(SynthAll.DATA_PATH)
+        super(NaiveSD, self).__init__(NaiveSD.DATA_PATH)
 
 
-class RealDset(BaseDataset):
+class FullSD(BaseDataset):
+    DATA_PATH = 'FullSD'
+
+    def __init__(self):
+        super(FullSD, self).__init__(FullSD.DATA_PATH)
+
+
+class Real(BaseDataset):
     DATA_PATH = 'real'
 
     def __init__(self):
-        super(RealDset, self).__init__(RealDset.DATA_PATH)
+        super(Real, self).__init__(Real.DATA_PATH)
 
 
-class SynthNumberCrop(BaseDataset):
-    DATA_PATH = 'synth_number_crop'
-
-    def __init__(self):
-        super(SynthNumberCrop, self).__init__(SynthNumberCrop.DATA_PATH, 'crop')
-
-
-class SynthTextCrop(BaseDataset):
-    DATA_PATH = 'synth_text_crop'
+class NNSD_crop(BaseDataset):
+    DATA_PATH = 'NNSD_crop'
 
     def __init__(self):
-        super(SynthTextCrop, self).__init__(SynthTextCrop.DATA_PATH, 'crop')
+        super(NNSD_crop, self).__init__(NNSD_crop.DATA_PATH, 'crop')
 
 
-class SynthCrop(BaseDataset):
-    DATA_PATH = 'synth_crop'
+class RISD_crop(BaseDataset):
+    DATA_PATH = 'RISD_crop'
 
     def __init__(self):
-        super(SynthCrop, self).__init__(SynthCrop.DATA_PATH, 'crop')
+        super(RISD_crop, self).__init__(RISD_crop.DATA_PATH, 'crop')
 
 
-class RealCrop(BaseDataset):
+class NaiveSD_crop(BaseDataset):
+    DATA_PATH = 'NaiveSD_crop'
+
+    def __init__(self):
+        super(NaiveSD_crop, self).__init__(NaiveSD_crop.DATA_PATH, 'crop')
+
+
+class Real_crop(BaseDataset):
     DATA_PATH = 'real_crop'
 
     def __init__(self):
-        super(RealCrop, self).__init__(RealCrop.DATA_PATH, 'crop')
+        super(Real_crop, self).__init__(Real_crop.DATA_PATH, 'crop')
 
-class RealHalf(BaseDataset):
-    DATA_PATH = 'real_half'
-
-    def __init__(self):
-        super(RealHalf, self).__init__(RealHalf.DATA_PATH, 'crop')
-
-
-class SynthTextCropCopy(BaseDataset):
-    DATA_PATH = 'synth_text_crop_copy'
+class FullSD_crop(BaseDataset):
+    DATA_PATH = 'FullSD_crop'
 
     def __init__(self):
-        super(SynthTextCropCopy, self).__init__(SynthTextCropCopy.DATA_PATH, 'crop')
-
-
-class SynthCropCopy(BaseDataset):
-    DATA_PATH = 'synth_crop_copy'
-
-    def __init__(self):
-        super(SynthCropCopy, self).__init__(SynthCropCopy.DATA_PATH, 'crop')
-
-
-class RealCropCopy(BaseDataset):
-    DATA_PATH = 'real_crop_copy'
-
-    def __init__(self):
-        super(RealCropCopy, self).__init__(RealCropCopy.DATA_PATH, 'crop')
+        super(FullSD_crop, self).__init__(FullSD_crop.DATA_PATH, 'crop')
 
 
 class DatasetType(Enum):
-    synth_text = 'synth_text'
-    synth_text_clean = 'synth_text_clean'
-    synth_text_clean_half = 'synth_text_clean_half'
-    synth_number = 'synth_number'
-    synth = 'synth_all'
+    nnsd = 'nnsd'
+    risd = 'risd'
+    naive = 'naive'
+    full = 'full'
     real = 'real'
-    synth_text_crop = 'synth_text_crop'
-    synth_number_crop = 'synth_number_crop'
-    synth_crop = 'synth_crop'
+    nnsd_crop = 'nnsd_crop'
+    risd_crop = 'risd_crop'
+    naive_crop = 'naive_crop'
+    full_crop = 'full_crop'
     real_crop = 'real_crop'
-    real_half = 'real_half'
-    synth_text_crop_copy = 'synth_text_crop_copy'
-    synth_crop_copy = 'synth_crop_copy'
-    real_crop_copy = 'real_crop_copy'
 
-datasets = {DatasetType.synth_text: SynthText,
-            DatasetType.synth_text_clean: SynthTextClean,
-            DatasetType.synth_text_clean_half: SynthTextCleanHalf,
-            DatasetType.synth_number: SynthNumber,
-            DatasetType.synth: SynthAll,
-            DatasetType.synth_text_crop: SynthTextCrop,
-            DatasetType.synth_number_crop:SynthNumberCrop,
-            DatasetType.synth_crop: SynthCrop,
-            DatasetType.real: RealDset,
-            DatasetType.real_crop: RealCrop,
-            DatasetType.real_half: RealHalf,
-            DatasetType.real_crop_copy: RealCropCopy,
-            DatasetType.synth_text_crop_copy: SynthTextCropCopy,
-            DatasetType.synth_crop_copy: SynthCropCopy}
+datasets = {DatasetType.nnsd: NNSD,
+            DatasetType.risd: RISD,
+            DatasetType.naive: NaiveSD,
+            DatasetType.full: FullSD,
+            DatasetType.real: Real,
+            DatasetType.risd_crop: RISD_crop,
+            DatasetType.nnsd_crop:NNSD_crop,
+            DatasetType.naive_crop: NaiveSD_crop,
+            DatasetType.real_crop: Real_crop,
+            DatasetType.full_crop: FullSD_crop}

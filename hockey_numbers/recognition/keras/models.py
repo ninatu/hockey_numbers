@@ -17,11 +17,14 @@ from keras import optimizers
 from keras.callbacks import ReduceLROnPlateau, CSVLogger, EarlyStopping, TensorBoard, ModelCheckpoint
 from keras.initializers import RandomNormal
 from keras.preprocessing.image import ImageDataGenerator
-from keras import backend as K
 from keras import regularizers
-import tensorflow as tf
 
-MODEL_DATA_DIR = '/home/GRAPHICS2/19n_tul/models'
+from model_utils import get_data_generator, compile_model
+from api import evaluate_model
+
+
+#MODEL_DATA_DIR = '/home/GRAPHICS2/19n_tul/models'
+MODEL_DATA_DIR = 'models'
 
 
 class ClassificationType(Enum):
@@ -33,10 +36,6 @@ class AbstractModel(metaclass=ABCMeta):
 
     @abstractmethod
     def train(self, train_data, valid_data, epochs, freeze_base, test_data):
-        pass
-
-    @abstractmethod
-    def evaluate(self, test_data, test_images):
         pass
 
     @abstractmethod
@@ -53,16 +52,17 @@ class BaseModel(AbstractModel):
         self._type = type
         self._base_name = '{}_{}'.format(name, type.value)
         self._name = '{}_{}'.format(self._base_name, datetime.datetime.now().strftime("%d_%m_%Y_%H_%M"))
+        self._path = osp.join(MODEL_DATA_DIR, self.name + '_model.hdf5')
 
         self._model = None
         self._base_model = None
 
-        self._input_size = (128, 64)
+        self._input_size = None
         self._gray = False
         self._pretrained = None
-        self._lr = 0.1
-        self._batch_size = 256
-        self._epoch_images = 1000
+        self._lr = None
+        self._batch_size = None
+        self._epoch_images = None
 
     @abstractmethod
     def _prepare_model(self):
@@ -75,6 +75,10 @@ class BaseModel(AbstractModel):
     @property
     def type(self):
         return self._type
+
+    @property
+    def path(self):
+        return self._path
 
     @property
     def input_shape(self):
@@ -108,25 +112,15 @@ class BaseModel(AbstractModel):
             self._lr = lr
 
     def save(self):
-        assert self._model is not None
-        model_path = osp.join(MODEL_DATA_DIR, self.name + '_model.hdf5')
-        print('Save model to {}'.format(model_path))
-        self._pretrained = model_path
-        self._model.save(model_path)
-
-        self._model.save(osp.join(MODEL_DATA_DIR, self.name + '_model.hdf5'))
+        print('Save model to {}'.format(self.path))
+        self._model.save(self.path)
 
     def _load_weights(self):
         if self._pretrained is not None:
             print("Load weights by path: {}".format(self._pretrained))
-            self._model.load_weights(self._pretrained, by_name=True)       
+            self._model.load_weights(self._pretrained, by_name=True)
 
-    def _save_test_results(self, dset_name, scores):
-        f_path = osp.join(MODEL_DATA_DIR, '{}_test_{}_acc_{}.txt'.format(self.name, dset_name, scores[1]))
-        with open(f_path, 'w') as fout:
-            for metric, score in zip(self._model.metrics_names, scores):
-                fout.write("{} = {}\n".format(metric, score))
-    def _save_params(self, train_data, valid_data, epochs, freeze_base, test_data):
+    def _save_params(self, train_dset, epochs, freeze_base, test_dset):
         params = {}
         params['base_name'] = self._base_name
         params['name'] = self._name
@@ -134,9 +128,8 @@ class BaseModel(AbstractModel):
         params['batch_size'] = self._batch_size
         params['lr'] = self._lr
         params['epochs'] = epochs
-        params['train_data'] = train_data[0]
-        params['valid_data'] = valid_data[0]
-        params['test_data'] = test_data[0] if test_data is not None else None
+        params['train_data'] = train_dset.name
+        params['test_data'] = test_dset.name if test_dset is not None else None
         params['input_shape'] = self.input_shape
         params['pretrained'] = self._pretrained
         params['freeze'] = freeze_base
@@ -156,6 +149,7 @@ class BaseModel(AbstractModel):
                                                        monitor='val_loss',
                                                        verbose=1,
                                                        period=period)
+
     def _get_tensorboard(self):
         log_dir = osp.join(MODEL_DATA_DIR, 'logs')
         return TensorBoard(log_dir=log_dir, histogram_freq=0, write_graph=False, write_images=True)
@@ -167,7 +161,7 @@ class BaseModel(AbstractModel):
         return CSVLogger(filename=log_path,
                                            append=True)
 
-    def _get_stoper(self, min_delta=0.001, patience=20):
+    def _get_stoper(self, min_delta=0.001, patience=15):
         return EarlyStopping(monitor='val_loss',
                              min_delta=min_delta,
                              patience=patience)
@@ -180,78 +174,46 @@ class BaseModel(AbstractModel):
                                        patience=patience,
                                        min_lr=min_lr)
 
+
     def _get_train_generator(self, data):
-        generator = ImageDataGenerator(featurewise_center=True,
-                                       samplewise_center=False,
-                                       featurewise_std_normalization=True,
-                                       samplewise_std_normalization=False,
-                                       zca_whitening=False,
-                                       rotation_range=10,
-                                       width_shift_range=0.1,
-                                       height_shift_range=0.1,
-                                       fill_mode='nearest')
-        data_dir, data_sample = data
-        if data_sample is not None:
-            generator.fit(data_sample)
+        return get_data_generator(data=data,
+                                  target_shape=self.input_shape,
+                                  batch_size=self._batch_size,
+                                  n_outputs=self.n_outputs,
+                                  shuffle=True,
+                                  rotation_range=0,
+                                  width_shift_range=0,
+                                  height_shift_range=0,
+                                  featurewise_std_normalization=False)
 
-        return generator.flow_from_directory(data_dir,
-                                            target_size=self._input_size,
-                                            batch_size=self._batch_size,
-                                            class_mode='binary' if self.n_outputs == 1 else "categorical",
-                                            shuffle=True,
-                                            color_mode="grayscale" if self._gray else 'rgb')
-                                            # save_to_dir='data/gen_img',
-                                            # save_prefix='img',
-                                            # save_format='png')
+    def _get_test_generator(self, data, shuffle=False):
+        return get_data_generator(data=data,
+                                  target_shape=self.input_shape,
+                                  batch_size=self._batch_size,
+                                  n_outputs=self.n_outputs,
+                                  shuffle=False,
+                                  featurewise_std_normalization=False)
 
-    def _get_test_generator(self, data, shuffle=True):
-        generator = ImageDataGenerator(featurewise_center=True,
-                                       featurewise_std_normalization=True)
-        data_dir, data_sample = data
-        if data_sample is not None:
-            generator.fit(data_sample)
-
-        return generator.flow_from_directory(data_dir,
-                                             target_size=self._input_size,
-                                             batch_size=self._batch_size,
-                                             class_mode='binary' if self.n_outputs == 1 else "categorical",
-                                             shuffle=shuffle,
-                                             color_mode="grayscale" if self._gray else 'rgb')
-
-
-    def clear_session(self):
-        K.clear_session()
-
-    def start_session(self):
-        config = tf.ConfigProto()
-        config.gpu_options.allow_growth=True
-        sess = tf.Session(config=config)
-        K.set_session(sess)
-    
     def _freeze_base_model(self):
-        if self._base_model is not None:
-            for layer in self._base_model.layers:
-                layer.trainable = False
+        pass
 
     def _unfreeze_base_model(self):
-        if self._base_model is not None:
-            for layer in self._base_model.layers:
-                layer.trainable = True
+        pass
 
-    def train(self, train_data, valid_data, epochs, freeze_base=0, test_data=None):
+    def train(self, train_dset, epochs, freeze_base=0, mult_lr=1, test_dset=None):
         print("TRAINING....")
 
         self._prepare_model()
+        self._load_weights()
         self._model.summary()
-        self._save_params(train_data, valid_data, epochs, freeze_base, test_data)
+        self._save_params(train_dset, epochs, freeze_base, test_dset)
 
 
         callbacks = [self._get_checkpointer(10), self._get_logger(),
-                     self._get_reducer(), self._get_stoper(), self._get_tensorboard()]
+                     self._get_reducer(), self._get_stoper()]
 
-        train_generator = self._get_train_generator(train_data)
-
-        valid_generator = self._get_train_generator(valid_data)
+        train_generator = self._get_train_generator(train_dset.get_train(self.input_shape))
+        valid_generator = self._get_train_generator(train_dset.get_test(self.input_shape))
 
         if freeze_base != 0:
             self._freeze_base_model()
@@ -259,23 +221,14 @@ class BaseModel(AbstractModel):
             self.save()
 
         self._unfreeze_base_model()
-        self._fit_step(self._lr, int(epochs * (1 - freeze_base)), train_generator, valid_generator, callbacks)
+        self._fit_step(self._lr * mult_lr, int(epochs * (1 - freeze_base)), train_generator, valid_generator, callbacks)
         self.save()
 
-        if test_data is not None:
-            self.evaluate(test_data)
-
-    def _compile(self, lr=0.01):
-        sgd = optimizers.SGD(lr=lr, decay=1e-6, momentum=0.9, nesterov=True)
-
-        self._model.compile(loss='categorical_crossentropy' if self.n_outputs > 1 else 'binary_crossentropy',
-                            optimizer=sgd,
-                            metrics=['categorical_accuracy' if self.n_outputs > 1 else 'binary_accuracy'])
+        if test_dset is not None:
+            evaluate_model(model_path=self.path, dset=test_dset, count_images=1000, batch_size=self._batch_size)
 
     def _fit_step(self, lr, epochs, train_generator, valid_generator, callbacks):
-
-        self._compile(lr)
-        self._load_weights()
+        compile_model(self._model, lr)
 
         self._model.fit_generator(train_generator,
                                   epochs=epochs, verbose=1,
@@ -284,54 +237,54 @@ class BaseModel(AbstractModel):
                                   validation_steps=int(0.1 * self._epoch_images) / self._batch_size,
                                   callbacks=callbacks)
 
-    def evaluate(self, test_data, test_images=1000):
-        
-        self._prepare_model()
-        self._compile()
-        self._load_weights()
-
-        test_generator = self._get_test_generator(test_data)
-
-        scores = self._model.evaluate_generator(test_generator,
-                                       steps=test_images/self._batch_size)
-
-        for metric, score in zip(self._model.metrics_names, scores):
-            print("{} = {}".format(metric, score))
-
-    def predict(self, test_data, test_images, path_to_save):
-        self._prepare_model()
-        self._compile()
-        self._load_weights()
-        test_generator = self._get_test_generator(test_data, shuffle=False)
-
-        predict = self._model.predict_generator(test_generator,
-                                                steps=np.ceil(float(test_images) / self._batch_size))
-        ans = dict()
-        ans['class_indices'] =  test_generator.class_indices
-        ans['filenames'] = test_generator.filenames
-        ans['predict'] = predict
-        with open(path_to_save, 'w') as fout:
-            json.dump(ans, fout)
-
 
 class VGG16Model(BaseModel):
     def __init__(self, type):
         super(VGG16Model, self).__init__('vgg16', type)
-
+    
+    def _pop_layer(self, model):
+        if not model.outputs:
+            raise Exception('Sequential model cannot be popped: model is empty.')
+        model.layers.pop()
+        if not model.layers:
+            model.outputs = []
+            model.inbound_nodes = []
+            model.outbound_nodes = []
+        else:
+            model.layers[-1].outbound_nodes = []
+            model.outputs = [model.layers[-1].output]
+        model.built = False
+   
     def _prepare_model(self):
         if self._model is not None:
             return
 
         self._base_model = VGG16(weights='imagenet', include_top=False, input_shape=self.input_shape)
-        x = self._base_model.output
+        self._pop_layer(self._base_model)
+        self._pop_layer(self._base_model)
+        self._pop_layer(self._base_model)
+        self._pop_layer(self._base_model)
+        
+        self._pop_layer(self._base_model)
+        self._pop_layer(self._base_model)
+        self._pop_layer(self._base_model)
+        self._pop_layer(self._base_model)
+
+        #self._pop_layer(self._base_model)
+        #self._pop_layer(self._base_model)
+        #self._pop_layer(self._base_model)
+
+        x = self._base_model.layers[-1].output#self._base_model.output
+
+        #x = Flatten(name='vgg16_flat')
         x = GlobalAveragePooling2D(name='vgg16_gap1')(x)
+        x = BatchNormalization(name='vgg16_bn1')(x)
+        #x = Dense(128, activation='relu',
+        #          #kernel_initializer=RandomNormal(mean=0.0, stddev=0.001),
+        #          kernel_regularizer=regularizers.l2(0.01),
+        #          name='vgg16_dense1')(x)
         #x = BatchNormalization(name='vgg16_bn1')(x)
-        x = Dense(128, activation='relu',
-                  kernel_initializer=RandomNormal(mean=0.0, stddev=0.001),
-                  kernel_regularizer=regularizers.l2(0.01),
-                  name='vgg16_dense1')(x)
-        #x = BatchNormalization(name='vgg16_bn1')(x)
-        #x = Dropout(0.7, name='vgg16_drop1')(x)
+        #x = Dropout(0.5, name='vgg16_drop1')(x)
         #x = Dense(1024, activation='relu', kernel_initializer=RandomNormal(mean=0.0, stddev=0.01),
         #          name = 'vgg16_dense2')(x)
 
@@ -339,27 +292,32 @@ class VGG16Model(BaseModel):
         predictions = Dense(n_outputs,
                             activation='softmax' if n_outputs > 1 else 'sigmoid',
                             kernel_regularizer=regularizers.l2(0.01),
-                            kernel_initializer=RandomNormal(mean=0.0, stddev=0.001),
+                            #kernel_initializer=RandomNormal(mean=0.0, stddev=0.001),
                             name='vgg16_softmax')(x)#+ self._type.value)(x)
 
 
         self._model = Model(input=self._base_model.input, output=predictions)
    
-    def _freeze_base_model(self, n=2):
-        print("FREEZE LAYER {}, UNFREEZ {}".format(19 - n, n))
+    def _freeze_base_model(self, n=4):
+        print("FREEZE LAYER {}, UNFREEZ {}".format(len(self._base_model.layers)  - n, n))
         for layer in self._base_model.layers[:-n]:
             layer.trainable = False
         for layer in self._base_model.layers[-n:]:
             layer.trainable = True
 
 
-    def _unfreeze_base_model(self, n=19):
-        print("FREEZE LAYER {}, UNFREEZ {}".format(19 - n, n))
+    def _unfreeze_base_model(self, n=15):
+        n = len(self._base_model.layers) 
+        print("FREEZE LAYER {}, UNFREEZ {}".format(len(self._base_model.layers) - n, n))
         for layer in self._base_model.layers[:-n]:
             layer.trainable = False
         for layer in self._base_model.layers[-n:]:
             layer.trainable = True
 
+    def train(self, train_data, valid_data, epochs, freeze_base=0,  test_data=None):
+        super(VGG16Model, self).train(train_data, valid_data, epochs, freeze_base, 
+                                      mult_lr=1, 
+                                      test_data=test_data)
 
 class GerkeModel(BaseModel):
     def __init__(self, type):
