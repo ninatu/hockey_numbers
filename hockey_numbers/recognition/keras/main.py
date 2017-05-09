@@ -2,6 +2,7 @@ import argparse
 
 from datasets import DatasetType, datasets
 from models import ModelType, models, ClassificationType
+from api import start_session, clear_session, evaluate_model, predict_model
 
 DEFAULT_TEST = 0.2
 DEFAULT_H = 200
@@ -18,7 +19,7 @@ def dset_prepare(args):
     dset.prepare(type=args.ctype, test_per=args.t)
 
 
-def train_model(args):
+def train(args):
     model = models[args.model](args.ctype)
     model.set_params(input_size=(args.height, args.width), gray=args.gray)
     model.set_params(lr=args.lr, pretrained=args.weights)
@@ -26,76 +27,41 @@ def train_model(args):
 
     train_dset = datasets[args.dset]()
     if not train_dset.is_prepared:
-        train_dset.prepare(type=args.ctype, test_per=0.2)
+        raise "Train dataset not prepared!"
 
     if args.test_dset is not None:
         test_dset = datasets[args.test_dset]()
         if not test_dset.is_prepared:
-            test_dset.prepare(type=args.ctype, test_per=1.0)
+            raise "Test dataset not prepared!"
     else:
         test_dset = None
 
-    if args.valid_dset is not None:
-        valid_dset = datasets[args.test_dset]()
-        if not valid_dset.is_prepared:
-            valid_dset.prepare(type=args.ctype, test_per=0)
-    else:
-        valid_dset = None
-
-    shape = (args.height, args.width, 1 if args.gray else 3)
-    train_data = train_dset.get_train(shape)
-    valid_data = valid_dset.get_train(shape) if valid_dset is not None else train_dset.get_test(shape)
-    test_data = test_dset.get_test(shape) if test_dset is not None else None
-
-    print("GET DATA: ")
-    print("TRAIN DATA: path: {}, sample shape: {}".format(train_data[0], train_data[1].shape))
-    print("VALID DATA: path: {}, sample shape: {}".format(valid_data[0], valid_data[1].shape))
-    if test_data is not None:
-        print("TEST DATA: path: {}, sample shape: {}".format(test_data[0], test_data[1].shape))
-
-    model.start_session()
-    model.train(train_data=train_data,
-                valid_data=valid_data,
+    start_session()
+    model.train(train_dset=train_dset,
                 epochs=args.epochs,
                 freeze_base=args.freeze,
-                test_data=test_data)
-    model.clear_session()
+                test_dset=test_dset)
+    clear_session()
 
 
-def evaluate_model(args):
-    model = models[args.model](args.ctype)
-    model.set_params(input_size=(args.height, args.width), gray=args.gray)
-    model.set_params(pretrained=args.weights)
-    model.set_params(batch_size=args.batch_size)
-
+def evaluate(args):
     test_dset = datasets[args.dset]()
     if not test_dset.is_prepared:
-        test_dset.prepare(type=args.ctype, test_per=1)
+        raise "Dataset not prepared!"
 
-    shape = (args.height, args.width, 1 if args.gray else 3)
-    test_data = test_dset.get_test(shape)
-
-    model.start_session()
-    model.evaluate(test_data, test_images=args.count)
-    model.clear_session()
+    start_session()
+    evaluate_model(args.model, test_dset, args.count, args.batch_size)
+    clear_session()
 
 
-def predict_model(args):
-    model = models[args.model](args.ctype)
-    model.set_params(input_size=(args.height, args.width), gray=args.gray)
-    model.set_params(pretrained=args.weights)
-    model.set_params(batch_size=args.batch_size)
-
+def predict(args):
     test_dset = datasets[args.dset]()
     if not test_dset.is_prepared:
-        test_dset.prepare(type=args.ctype, test_per=1)
+        raise "Dataset not prepared!"
 
-    shape = (args.height, args.width, 1 if args.gray else 3)
-    test_data = test_dset.get_test(shape)
-
-    model.start_session()
-    model.predict(test_data, test_images=args.count, path_to_save=args.outfile)
-    model.clear_session()
+    start_session()
+    predict_model(args.model, test_dset, args.count, args.batch_size, args.outfile)
+    clear_session()
     
 
 def main():
@@ -113,7 +79,6 @@ def main():
     train_parser = subparsers.add_parser('train', help='train model')
     train_parser.add_argument('model', type=ModelType, help='model type')
     train_parser.add_argument('dset', type=DatasetType, help='dataset type for train')
-    train_parser.add_argument('--valid_dset', type=DatasetType, help='dataset type for valid')
     train_parser.add_argument('--ctype', type=ClassificationType, required=False,
                               default=ClassificationType.NUMBERS, help='classification type')
     train_parser.add_argument('-w', '--width', type=int, required=False, default=DEFAULT_W, help='width data')
@@ -127,37 +92,22 @@ def main():
     train_parser.add_argument('--batch_size', type=int, default=DEFAULT_BATCH_SIZE, help='batch_size')
     train_parser.add_argument('--test_dset', type=DatasetType, default=None, help='dataset type for test')
     train_parser.add_argument('--weights', type=str, default=None, help='pretrainet weights')
-    train_parser.set_defaults(func=train_model)
+    train_parser.set_defaults(func=train)
 
     evaluate_parser = subparsers.add_parser('evaluate', help='evaluate model')
-    evaluate_parser.add_argument('model', type=ModelType, help='model type')
-    evaluate_parser.add_argument('dset', type=DatasetType, help='dataset type for evaluate')
-    evaluate_parser.add_argument('--weights', type=str, required=True, help='pretrainet weights')
+    evaluate_parser.add_argument('--dset', type=DatasetType, required=True, help='dataset type for evaluate')
+    evaluate_parser.add_argument('--model', type=str, required=True, help='path to pretrained model')
     evaluate_parser.add_argument('--count', type=int, required=True, help='count images for evaluate')
-
-    evaluate_parser.add_argument('--ctype', type=ClassificationType, required=False,
-                              default=ClassificationType.NUMBERS, help='classification type')
-    evaluate_parser.add_argument('-w', '--width', type=int, required=False, default=DEFAULT_W, help='width data')
-    evaluate_parser.add_argument('-r', '--height', type=int, required=False, default=DEFAULT_H, help='height data')
-    evaluate_parser.add_argument('--gray', action='store_true', default=False, help='convert to grayscale')
     evaluate_parser.add_argument('--batch_size', type=int, default=DEFAULT_BATCH_SIZE, help='batch_size')
-    evaluate_parser.set_defaults(func=evaluate_model)
+    evaluate_parser.set_defaults(func=evaluate)
 
     predict_parser = subparsers.add_parser('predict', help='predict model')
-    predict_parser.add_argument('model', type=ModelType, help='model type')
-    predict_parser.add_argument('dset', type=DatasetType, help='dataset type for predict')
-    predict_parser.add_argument('--weights', type=str, required=True, help='pretrainet weights')
-    predict_parser.add_argument('--count', type=int, required=True, help='count images for predict')
+    predict_parser.add_argument('--dset', type=DatasetType, required=True, help='dataset type for predict')
+    predict_parser.add_argument('--model', type=str, required=True, help='path to pretrained model')
+    predict_parser.add_argument('--count', type=int, required=True, help='count images in dataset')
     predict_parser.add_argument('-o', '--outfile', type=str, required=True, help='file to save results')
-
-    predict_parser.add_argument('--ctype', type=ClassificationType, required=False,
-                                 default=ClassificationType.NUMBERS, help='classification type')
-    predict_parser.add_argument('-w', '--width', type=int, required=False, default=DEFAULT_W, help='width data')
-    predict_parser.add_argument('-r', '--height', type=int, required=False, default=DEFAULT_H, help='height data')
-    predict_parser.add_argument('--gray', action='store_true', default=False, help='convert to grayscale')
     predict_parser.add_argument('--batch_size', type=int, default=DEFAULT_BATCH_SIZE, help='batch_size')
-    predict_parser.set_defaults(func=predict_model)
-
+    predict_parser.set_defaults(func=predict)
 
     args = parser.parse_args()
     args.func(args)
