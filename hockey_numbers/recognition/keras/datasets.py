@@ -195,7 +195,7 @@ class BaseDataset:
 
 
 class RISD(BaseDataset):
-    DATA_PATH = 'SDRI'
+    DATA_PATH = 'RISD'
 
     def __init__(self):
         super(RISD, self).__init__(RISD.DATA_PATH)
@@ -216,7 +216,7 @@ class NaiveSD(BaseDataset):
 
 
 class FullSD(BaseDataset):
-    DATA_PATH = 'synth_all'
+    DATA_PATH = 'FullSD'
 
     def __init__(self):
         super(FullSD, self).__init__(FullSD.DATA_PATH)
@@ -230,21 +230,21 @@ class Real(BaseDataset):
 
 
 class NNSD_crop(BaseDataset):
-    DATA_PATH = 'synth_number_crop'
+    DATA_PATH = 'NNSD_crop'
 
     def __init__(self):
         super(NNSD_crop, self).__init__(NNSD_crop.DATA_PATH, 'crop')
 
 
 class RISD_crop(BaseDataset):
-    DATA_PATH = 'synth_text_crop'
+    DATA_PATH = 'RISD_crop'
 
     def __init__(self):
         super(RISD_crop, self).__init__(RISD_crop.DATA_PATH, 'crop')
 
 
 class NaiveSD_crop(BaseDataset):
-    DATA_PATH = 'synth_crop'
+    DATA_PATH = 'NaiveSD_crop'
 
     def __init__(self):
         super(NaiveSD_crop, self).__init__(NaiveSD_crop.DATA_PATH, 'crop')
@@ -257,7 +257,7 @@ class Real_crop(BaseDataset):
         super(Real_crop, self).__init__(Real_crop.DATA_PATH, 'crop')
 
 class FullSD_crop(BaseDataset):
-    DATA_PATH = 'real_half'
+    DATA_PATH = 'FullSD_crop'
 
     def __init__(self):
         super(FullSD_crop, self).__init__(FullSD_crop.DATA_PATH, 'crop')
