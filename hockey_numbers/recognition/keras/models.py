@@ -162,12 +162,12 @@ class BaseModel(AbstractModel):
                                            append=True)
 
 
-    def _get_stoper(self, min_delta=0.001, patience=15):
+    def _get_stoper(self, min_delta=0.001, patience=6):
         return EarlyStopping(monitor='val_loss',
                              min_delta=min_delta,
                              patience=patience)
 
-    def _get_reducer(self, factor=0.1, patience=5, min_lr=0.00001):
+    def _get_reducer(self, factor=0.1, patience=3, min_lr=0.00001):
         return ReduceLROnPlateau(monitor='val_loss',
                                        factor=factor,
                                        verbose=1,
@@ -225,7 +225,7 @@ class BaseModel(AbstractModel):
         self.save()
 
         if test_dset is not None:
-            evaluate_model(model_path=self.path, dset=test_dset, count_images=1000, batch_size=self._batch_size)
+            evaluate_model(model_path=self.path, dset=test_dset, count_images=837, batch_size=self._batch_size)
 
     def _fit_step(self, lr, epochs, train_generator, valid_generator, callbacks):
         compile_model(self._model, lr)
@@ -266,10 +266,10 @@ class VGG16Model(BaseModel):
         self._pop_layer(self._base_model)
         self._pop_layer(self._base_model)
         
-        self._pop_layer(self._base_model)
-        self._pop_layer(self._base_model)
-        self._pop_layer(self._base_model)
-        self._pop_layer(self._base_model)
+        #self._pop_layer(self._base_model)
+        #self._pop_layer(self._base_model)
+        #self._pop_layer(self._base_model)
+        #self._pop_layer(self._base_model)
 
         #self._pop_layer(self._base_model)
         #self._pop_layer(self._base_model)
@@ -277,14 +277,14 @@ class VGG16Model(BaseModel):
 
         x = self._base_model.layers[-1].output#self._base_model.output
 
-        #x = Flatten(name='vgg16_flat')
+        #x = Flatten(name='vgg16_flat')(x)
         x = GlobalAveragePooling2D(name='vgg16_gap1')(x)
         x = BatchNormalization(name='vgg16_bn1')(x)
-        #x = Dense(128, activation='relu',
-        #          #kernel_initializer=RandomNormal(mean=0.0, stddev=0.001),
-        #          kernel_regularizer=regularizers.l2(0.01),
-        #          name='vgg16_dense1')(x)
-        #x = BatchNormalization(name='vgg16_bn1')(x)
+        x = Dense(128, activation='relu',
+                  #kernel_initializer=RandomNormal(mean=0.0, stddev=0.001),
+                  kernel_regularizer=regularizers.l2(0.01),
+                  name='vgg16_dense1')(x)
+        x = BatchNormalization(name='vgg16_bn2')(x)
         #x = Dropout(0.5, name='vgg16_drop1')(x)
         #x = Dense(1024, activation='relu', kernel_initializer=RandomNormal(mean=0.0, stddev=0.01),
         #          name = 'vgg16_dense2')(x)
@@ -317,7 +317,7 @@ class VGG16Model(BaseModel):
 
     def train(self, train_dset,  epochs, freeze_base=0,  test_dset=None):
         super(VGG16Model, self).train(train_dset, epochs, freeze_base, 
-                                      mult_lr=1, 
+                                      mult_lr=0.1, 
                                       test_dset=test_dset)
 
 class GerkeModel(BaseModel):

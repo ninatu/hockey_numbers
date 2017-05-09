@@ -237,11 +237,32 @@ class NNSD_crop(BaseDataset):
         super(NNSD_crop, self).__init__(NNSD_crop.DATA_PATH, 'crop')
 
 
+class NNSD_half(BaseDataset):
+    DATA_PATH = 'NNSD_half'
+
+    def __init__(self):
+        super(NNSD_half, self).__init__(NNSD_half.DATA_PATH, 'crop')
+
+
 class RISD_crop(BaseDataset):
     DATA_PATH = 'RISD_crop'
 
     def __init__(self):
         super(RISD_crop, self).__init__(RISD_crop.DATA_PATH, 'crop')
+
+
+class RISD_half(BaseDataset):
+    DATA_PATH = 'RISD_half'
+
+    def __init__(self):
+        super(RISD_half, self).__init__(RISD_half.DATA_PATH, 'crop')
+
+
+class NaiveSD_half(BaseDataset):
+    DATA_PATH = 'NaiveSD_half'
+
+    def __init__(self):
+        super(NaiveSD_half, self).__init__(NaiveSD_half.DATA_PATH, 'crop')
 
 
 class NaiveSD_crop(BaseDataset):
@@ -251,17 +272,47 @@ class NaiveSD_crop(BaseDataset):
         super(NaiveSD_crop, self).__init__(NaiveSD_crop.DATA_PATH, 'crop')
 
 
+class NaiveImpSD_half(BaseDataset):
+    DATA_PATH = 'NaiveImpSD_half'
+
+    def __init__(self):
+        super(NaiveImpSD_half, self).__init__(NaiveImpSD_half.DATA_PATH, 'crop')
+
+
+class NaiveImpSD_crop(BaseDataset):
+    DATA_PATH = 'NaiveImpSD_crop'
+
+    def __init__(self):
+        super(NaiveImpSD_crop, self).__init__(NaiveImpSD_crop.DATA_PATH, 'crop')
+
+
+
 class Real_crop(BaseDataset):
     DATA_PATH = 'real_crop'
 
     def __init__(self):
         super(Real_crop, self).__init__(Real_crop.DATA_PATH, 'crop')
 
+
+class Real_half(BaseDataset):
+    DATA_PATH = 'real_half'
+
+    def __init__(self):
+        super(Real_half, self).__init__(Real_half.DATA_PATH, 'crop')
+
+
 class FullSD_crop(BaseDataset):
     DATA_PATH = 'FullSD_crop'
 
     def __init__(self):
         super(FullSD_crop, self).__init__(FullSD_crop.DATA_PATH, 'crop')
+
+
+class FullSD_half(BaseDataset):
+    DATA_PATH = 'FullSD_half'
+
+    def __init__(self):
+        super(FullSD_half, self).__init__(FullSD_half.DATA_PATH, 'crop')
 
 
 class DatasetType(Enum):
@@ -271,10 +322,22 @@ class DatasetType(Enum):
     full = 'full'
     real = 'real'
     nnsd_crop = 'nnsd_crop'
+    nnsd_half = 'nnsd_half'
+
     risd_crop = 'risd_crop'
+    risd_half = 'risd_half'
+    
+    naive_imp_crop = 'naive_imp_crop'
+    naive_imp_half = 'naive_imp_half'
+
     naive_crop = 'naive_crop'
+    naive_half = 'naive_half'
+
     full_crop = 'full_crop'
+    full_half = 'full_half'
+    
     real_crop = 'real_crop'
+    real_half = 'real_half'
 
 datasets = {DatasetType.nnsd: NNSD,
             DatasetType.risd: RISD,
@@ -282,7 +345,14 @@ datasets = {DatasetType.nnsd: NNSD,
             DatasetType.full: FullSD,
             DatasetType.real: Real,
             DatasetType.risd_crop: RISD_crop,
+            DatasetType.risd_half: RISD_half,
             DatasetType.nnsd_crop:NNSD_crop,
+            DatasetType.nnsd_half:NNSD_half,
             DatasetType.naive_crop: NaiveSD_crop,
+            DatasetType.naive_half: NaiveSD_half,
+            DatasetType.naive_imp_crop: NaiveImpSD_crop,
+            DatasetType.naive_imp_half: NaiveImpSD_half,
             DatasetType.real_crop: Real_crop,
-            DatasetType.full_crop: FullSD_crop}
+            DatasetType.real_half: Real_half,
+            DatasetType.full_crop: FullSD_crop,
+            DatasetType.full_half: FullSD_half}
