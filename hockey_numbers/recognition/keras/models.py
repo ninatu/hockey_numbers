@@ -266,10 +266,10 @@ class VGG16Model(BaseModel):
         self._pop_layer(self._base_model)
         self._pop_layer(self._base_model)
         
-        #self._pop_layer(self._base_model)
-        #self._pop_layer(self._base_model)
-        #self._pop_layer(self._base_model)
-        #self._pop_layer(self._base_model)
+        self._pop_layer(self._base_model)
+        self._pop_layer(self._base_model)
+        self._pop_layer(self._base_model)
+        self._pop_layer(self._base_model)
 
         #self._pop_layer(self._base_model)
         #self._pop_layer(self._base_model)
@@ -280,11 +280,11 @@ class VGG16Model(BaseModel):
         #x = Flatten(name='vgg16_flat')(x)
         x = GlobalAveragePooling2D(name='vgg16_gap1')(x)
         x = BatchNormalization(name='vgg16_bn1')(x)
-        x = Dense(128, activation='relu',
-                  #kernel_initializer=RandomNormal(mean=0.0, stddev=0.001),
-                  kernel_regularizer=regularizers.l2(0.01),
-                  name='vgg16_dense1')(x)
-        x = BatchNormalization(name='vgg16_bn2')(x)
+        #x = Dense(128, activation='relu',
+        #          #kernel_initializer=RandomNormal(mean=0.0, stddev=0.001),
+        #          kernel_regularizer=regularizers.l2(0.01),
+        #          name='vgg16_dense1')(x)
+        #x = BatchNormalization(name='vgg16_bn2')(x)
         #x = Dropout(0.5, name='vgg16_drop1')(x)
         #x = Dense(1024, activation='relu', kernel_initializer=RandomNormal(mean=0.0, stddev=0.01),
         #          name = 'vgg16_dense2')(x)
