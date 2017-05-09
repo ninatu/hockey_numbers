@@ -23,8 +23,8 @@ from model_utils import get_data_generator, compile_model
 from api import evaluate_model
 
 
-#MODEL_DATA_DIR = '/home/GRAPHICS2/19n_tul/models'
-MODEL_DATA_DIR = 'models'
+MODEL_DATA_DIR = '/home/GRAPHICS2/19n_tul/models'
+#MODEL_DATA_DIR = 'models'
 
 
 class ClassificationType(Enum):
@@ -35,7 +35,7 @@ class ClassificationType(Enum):
 class AbstractModel(metaclass=ABCMeta):
 
     @abstractmethod
-    def train(self, train_data, valid_data, epochs, freeze_base, test_data):
+    def train(self, train_dset, epochs, freeze_base, test_dset):
         pass
 
     @abstractmethod
@@ -315,10 +315,10 @@ class VGG16Model(BaseModel):
         for layer in self._base_model.layers[-n:]:
             layer.trainable = True
 
-    def train(self, train_data, valid_data, epochs, freeze_base=0,  test_data=None):
-        super(VGG16Model, self).train(train_data, valid_data, epochs, freeze_base, 
+    def train(self, train_dset,  epochs, freeze_base=0,  test_dset=None):
+        super(VGG16Model, self).train(train_dset, epochs, freeze_base, 
                                       mult_lr=1, 
-                                      test_data=test_data)
+                                      test_dset=test_dset)
 
 class GerkeModel(BaseModel):
     def __init__(self, type):

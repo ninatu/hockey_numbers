@@ -8,10 +8,10 @@ from enum import Enum
 
 from models import ClassificationType
 
-DATA_FOLDER = 'data'
+#DATA_FOLDER = 'data'
 DIR_NOT_NUMBER = 'not_number'
 DIR_NOT_NUMBER_CROP = 'not_number_crop'
-#DATA_FOLDER = '/home/GRAPHICS2/19n_tul/data'
+DATA_FOLDER = '/home/GRAPHICS2/19n_tul/data'
 
 
 def get_dirs(path):
@@ -66,6 +66,7 @@ class BaseDataset:
 
     @property
     def is_prepared(self):
+        print(self._train_path)
         return osp.exists(self._train_path)
 
     def get_train(self, shape):
