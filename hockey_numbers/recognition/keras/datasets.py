@@ -355,4 +355,4 @@ datasets = {DatasetType.nnsd: NNSD,
             DatasetType.real_crop: Real_crop,
             DatasetType.real_half: Real_half,
             DatasetType.full_crop: FullSD_crop,
-            DatasetType.full_half: FullSD_half}mport os.path as osp
+            DatasetType.full_half: FullSD_half}
