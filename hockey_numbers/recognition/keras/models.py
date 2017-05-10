@@ -310,9 +310,9 @@ class VGG16Model(BaseModel):
     def _unfreeze_base_model(self, n=15):
         n = len(self._base_model.layers) 
         print("FREEZE LAYER {}, UNFREEZ {}".format(len(self._base_model.layers) - n, n))
-        for layer in self._base_model.layers[:-n]:
+        for layer in self._base_model.layers[:4]:
             layer.trainable = False
-        for layer in self._base_model.layers[-n:]:
+        for layer in self._base_model.layers[4:]:
             layer.trainable = True
 
     def train(self, train_dset,  epochs, freeze_base=0,  test_dset=None):

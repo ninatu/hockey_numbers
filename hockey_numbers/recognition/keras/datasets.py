@@ -301,6 +301,21 @@ class Real_half(BaseDataset):
         super(Real_half, self).__init__(Real_half.DATA_PATH, 'crop')
 
 
+class FullHardSD_crop(BaseDataset):
+    DATA_PATH = 'FullHardSD_crop'
+
+    def __init__(self):
+        super(FullHardSD_crop, self).__init__(FullHardSD_crop.DATA_PATH, 'crop')
+
+
+class FullHardSD_half(BaseDataset):
+    DATA_PATH = 'FullHardSD_half'
+
+    def __init__(self):
+        super(FullHardSD_half, self).__init__(FullHardSD_half.DATA_PATH, 'crop')
+
+
+
 class FullSD_crop(BaseDataset):
     DATA_PATH = 'FullSD_crop'
 
@@ -335,6 +350,9 @@ class DatasetType(Enum):
 
     full_crop = 'full_crop'
     full_half = 'full_half'
+
+    full_hard_crop = 'full_hard_crop'
+    full_hard_half = 'full_hard_half'
     
     real_crop = 'real_crop'
     real_half = 'real_half'
@@ -355,4 +373,6 @@ datasets = {DatasetType.nnsd: NNSD,
             DatasetType.real_crop: Real_crop,
             DatasetType.real_half: Real_half,
             DatasetType.full_crop: FullSD_crop,
-            DatasetType.full_half: FullSD_half}
+            DatasetType.full_half: FullSD_half,
+            DatasetType.full_hard_crop: FullHardSD_crop,
+            DatasetType.full_hard_half: FullHardSD_half}
