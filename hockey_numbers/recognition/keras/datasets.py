@@ -75,7 +75,7 @@ class BaseDataset:
     def get_test(self, shape):
         return (self._test_path, self._get_sample(self._test_path, shape))
 
-    def _get_sample(self, path, shape, max_count=5000):
+    def _get_sample(self, path, shape, max_count=20000):
         files = recursively_get_files(path)
         random.shuffle(files)
         files = files[:max_count]
@@ -330,6 +330,20 @@ class FullSD_half(BaseDataset):
         super(FullSD_half, self).__init__(FullSD_half.DATA_PATH, 'crop')
 
 
+class SVHN_crop(BaseDataset):
+    DATA_PATH = 'SVHN_crop'
+
+    def __init__(self):
+        super(SVHN_crop, self).__init__(SVHN_crop.DATA_PATH, 'crop')
+
+
+class SVHN_half(BaseDataset):
+    DATA_PATH = 'SVHN_half'
+
+    def __init__(self):
+        super(SVHN_half, self).__init__(SVHN_half.DATA_PATH, 'crop')
+
+
 class DatasetType(Enum):
     nnsd = 'nnsd'
     risd = 'risd'
@@ -356,6 +370,10 @@ class DatasetType(Enum):
     
     real_crop = 'real_crop'
     real_half = 'real_half'
+ 
+    svhn_crop = 'svhn_crop'
+    svhn_half = 'svhn_half'
+
 
 datasets = {DatasetType.nnsd: NNSD,
             DatasetType.risd: RISD,
@@ -372,6 +390,8 @@ datasets = {DatasetType.nnsd: NNSD,
             DatasetType.naive_imp_half: NaiveImpSD_half,
             DatasetType.real_crop: Real_crop,
             DatasetType.real_half: Real_half,
+            DatasetType.svhn_crop: SVHN_crop,
+            DatasetType.svhn_half: SVHN_half,
             DatasetType.full_crop: FullSD_crop,
             DatasetType.full_half: FullSD_half,
             DatasetType.full_hard_crop: FullHardSD_crop,
