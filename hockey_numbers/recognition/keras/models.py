@@ -23,8 +23,8 @@ from model_utils import get_data_generator, compile_model
 from api import evaluate_model
 
 
-#MODEL_DATA_DIR = '/home/GRAPHICS2/19n_tul/models'
-MODEL_DATA_DIR = 'models'
+MODEL_DATA_DIR = '/home/GRAPHICS2/19n_tul/models'
+#MODEL_DATA_DIR = 'models'
 
 
 class ClassificationType(Enum):
@@ -161,13 +161,13 @@ class BaseModel(AbstractModel):
         return CSVLogger(filename=log_path,
                                            append=True)
 
-    def _get_stoper(self, min_delta=0.001, patience=15):
+    def _get_stoper(self, min_delta=0.001, patience=6):
         return EarlyStopping(monitor='val_loss',
                              min_delta=min_delta,
                              patience=patience)
 
 
-    def _get_reducer(self, factor=np.sqrt(0.1), patience=5, min_lr=0.00001):
+    def _get_reducer(self, factor=np.sqrt(0.1), patience=3, min_lr=0.00001):
         return ReduceLROnPlateau(monitor='val_loss',
                                        factor=factor,
                                        verbose=1,
@@ -182,8 +182,8 @@ class BaseModel(AbstractModel):
                                   n_outputs=self.n_outputs,
                                   shuffle=True,
                                   rotation_range=0,
-                                  width_shift_range=0,
-                                  height_shift_range=0,
+                                  width_shift_range=0.1,
+                                  height_shift_range=0.1,
                                   featurewise_std_normalization=False)
 
     def _get_test_generator(self, data, shuffle=False):
@@ -225,7 +225,7 @@ class BaseModel(AbstractModel):
         self.save()
 
         if test_dset is not None:
-            evaluate_model(model_path=self.path, dset=test_dset, count_images=1000, batch_size=self._batch_size)
+            evaluate_model(model_path=self.path, dset=test_dset, count_images=837, batch_size=self._batch_size)
 
     def _fit_step(self, lr, epochs, train_generator, valid_generator, callbacks):
         compile_model(self._model, lr)
@@ -329,47 +329,49 @@ class GerkeModel(BaseModel):
 
         input = Input(shape=self.input_shape)
         x = input
-        x = Conv2D(filters=32, kernel_size=(5, 5), strides=(1, 1), padding='same',
+        x = Conv2D(filters=96, kernel_size=(5, 5), strides=(1, 1), padding='same',
                    activation='relu', #kernel_initializer=RandomNormal(mean=0.0, stddev=0.01),
                    name='gerke_conv1')(x)
-        x = MaxPooling2D(pool_size=(2, 2), strides=(2, 2), padding='same',
+        x = MaxPooling2D(pool_size=(3, 3), strides=(2, 2), padding='same',
                          name='gerke_max1')(x)
 
-        #x = BatchNormalization(name='gerke_bn1')(x)
+        x = BatchNormalization(name='gerke_bn1')(x)
         
 
-        x = Conv2D(filters=60, kernel_size=(7, 7), strides=(1, 1), padding='same',
+        x = Conv2D(filters=128, kernel_size=(5, 5), strides=(1, 1), padding='same',
                    activation='relu', #kernel_initializer=RandomNormal(mean=0.0, stddev=0.01),
                    name='gerke_conv2')(x)
-        x = MaxPooling2D(pool_size=(3, 3), strides=(3, 3), padding='same',
+        x = MaxPooling2D(pool_size=(3, 3), strides=(2, 2), padding='same',
                          name='gerke_max2')(x)    
-        #x = BatchNormalization(name='gerke_bn2')(x)
+        x = BatchNormalization(name='gerke_bn2')(x)
         
         
-        x = Conv2D(filters=100, kernel_size=(3, 3), strides=(1, 1), padding='same',
+        x = Conv2D(filters=256, kernel_size=(5, 5), strides=(1, 1), padding='same',
                    activation='relu', # kernel_initializer=RandomNormal(mean=0.0, stddev=0.01),
                    name='gerke_conv3')(x)
-        x = MaxPooling2D(pool_size=(3, 3), strides=(3, 3), padding='same',
+        x = MaxPooling2D(pool_size=(3, 3), strides=(2, 2), padding='same',
                          name='gerke_max3')(x)
 
+        x = BatchNormalization(name='gerke_bn3')(x)
         x = GlobalAveragePooling2D(name='gerke_gap1')(x)
-        x = BatchNormalization(name='gerke_bn1')(x)
+        #x = BatchNormalization(name='gerke_bn3')(x)
 
-        #ix = Flatten(name='gerke_flat')(x)
+        #x = Flatten(name='gerke_flat')(x)
         #x = BatchNormalization(name='gerke_bn1')(x)
-        x = Dense(50, activation='relu', #kernel_initializer=RandomNormal(mean=0.0, stddev=0.01),
+        x = Dense(128, activation='relu', #kernel_initializer=RandomNormal(mean=0.0, stddev=0.01),
                   kernel_regularizer=regularizers.l2(0.01),
                   name='gerke_dense1')(x)
-        x = BatchNormalization(name='gerke_bn1.5')(x)
-        x = Dense(50, activation='relu', #kernel_initializer=RandomNormal(mean=0.0, stddev=0.01),
+        x = BatchNormalization(name='gerke_bn4')(x)
+        x = Dense(128, activation='relu', #kernel_initializer=RandomNormal(mean=0.0, stddev=0.01),
                   kernel_regularizer=regularizers.l2(0.01),
                   name='gerke_dense2')(x)
 
-        x = BatchNormalization(name='gerke_bn2.5')(x)
+        #x = Dropout(0.5, name='gerke_dr1')(x)
+        x = BatchNormalization(name='gerke_bn5')(x)
         predictions = Dense(self.n_outputs,
                   activation='softmax' if self.n_outputs > 1 else 'sigmoid',
                   #kernel_initializer=#RandomNormal(mean=0.0, stddev=0.01),
-                  name='gerke_softmax_'+ self._type.value)(x)
+                  name='gerke_softmax'+ self._type.value)(x)
 
         self._model = Model(input=input, output=predictions)
 
