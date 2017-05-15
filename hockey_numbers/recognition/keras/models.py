@@ -1,30 +1,25 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
 from abc import abstractmethod
 from abc import ABCMeta
 from enum import Enum
 import datetime
 import os.path as osp
-import numpy as np
-import sys
 import json
 
 from keras.applications.vgg16 import VGG16
 from keras.models import Model
 from keras.layers import Dense, GlobalAveragePooling2D, Input, MaxPooling2D
-from keras.layers.core import Dropout, Flatten
+from keras.layers.core import Flatten
 from keras.layers.normalization import BatchNormalization
 from keras.layers.convolutional import Conv2D
-from keras import optimizers
 from keras.callbacks import ReduceLROnPlateau, CSVLogger, EarlyStopping, TensorBoard, ModelCheckpoint
-from keras.initializers import RandomNormal
-from keras.preprocessing.image import ImageDataGenerator
 from keras import regularizers
 
 from model_utils import get_data_generator, compile_model
 from api import evaluate_model
-
-
-MODEL_DATA_DIR = '/home/GRAPHICS2/19n_tul/models'
-#MODEL_DATA_DIR = 'models'
+from constants import MODEL_DATA_DIR
 
 
 class ClassificationType(Enum):
@@ -320,64 +315,10 @@ class VGG16Model(BaseModel):
                                       mult_lr=0.1, 
                                       test_dset=test_dset)
 
+
 class GerkeModel(BaseModel):
     def __init__(self, type):
         super(GerkeModel, self).__init__('gerke', type)
-    
-    
-    def _prepare_model_base(self):
-        if self._model is not None:
-            return
-
-        input = Input(shape=self.input_shape)
-        x = input
-        
-        x = Conv2D(filters=16, kernel_size=(5, 5), strides=(1, 1), padding='same',
-                   activation='relu', #kernel_initializer=RandomNormal(mean=0.0, stddev=0.01),
-                   name='gerke_conv1')(x)
-        x = MaxPooling2D(pool_size=(2, 2), strides=(2, 2), padding='same',
-                         name='gerke_max1')(x)
-
-        #x = BatchNormalization(name='gerke_bn1')(x)
-        
-
-        x = Conv2D(filters=30, kernel_size=(7, 7), strides=(1, 1), padding='same',
-                   activation='relu', #kernel_initializer=RandomNormal(mean=0.0, stddev=0.01),
-                   name='gerke_conv2')(x)
-        x = MaxPooling2D(pool_size=(3, 3), strides=(3, 3), padding='same',
-                         name='gerke_max2')(x)    
-        #x = BatchNormalization(name='gerke_bn2')(x)
-        
-        
-        x = Conv2D(filters=50, kernel_size=(3, 3), strides=(1, 1), padding='same',
-                   activation='relu', # kernel_initializer=RandomNormal(mean=0.0, stddev=0.01),
-                   name='gerke_conv3')(x)
-        x = MaxPooling2D(pool_size=(3, 3), strides=(3, 3), padding='same',
-                         name='gerke_max3')(x)
-
-        #x = BatchNormalization(name='gerke_bn3')(x)
-        #x = GlobalAveragePooling2D(name='gerke_gap1')(x)
-        #x = BatchNormalization(name='gerke_bn3')(x)
-
-        x = Flatten(name='gerke_flat_34')(x)
-        #x = BatchNormalization(name='gerke_bn1')(x)
-        x = Dense(34, activation='relu', #kernel_initializer=RandomNormal(mean=0.0, stddev=0.01),
-                  kernel_regularizer=regularizers.l2(0.01),
-                  name='gerke_dense1_34')(x)
-        #x = BatchNormalization(name='gerke_bn_34')(x)
-        x = Dense(34, activation='relu', #kernel_initializer=RandomNormal(mean=0.0, stddev=0.01),
-                  kernel_regularizer=regularizers.l2(0.01),
-                  name='gerke_dense2_34')(x)
-
-        #x = Dropout(0.5, name='gerke_dr1')(x)
-        #x = BatchNormalization(name='gerke_bn_34_2')(x)
-        predictions = Dense(self.n_outputs,
-                  activation='softmax' if self.n_outputs > 1 else 'sigmoid',
-                  #kernel_initializer=#RandomNormal(mean=0.0, stddev=0.01),
-                  name='gerke_softmax_34'+ self._type.value)(x)
-
-        self._model = Model(input=input, output=predictions)
-        
 
     def _prepare_model(self):
         if self._model is not None:
@@ -387,54 +328,98 @@ class GerkeModel(BaseModel):
         x = input
         
         x = Conv2D(filters=96, kernel_size=(5, 5), strides=(1, 1), padding='same',
-                   activation='relu', #kernel_initializer=RandomNormal(mean=0.0, stddev=0.01),
+                   activation='relu',
                    name='gerke_conv1')(x)
         x = MaxPooling2D(pool_size=(3, 3), strides=(2, 2), padding='same',
                          name='gerke_max1')(x)
-
         x = BatchNormalization(name='gerke_bn1')(x)
-        
 
         x = Conv2D(filters=128, kernel_size=(5, 5), strides=(1, 1), padding='same',
-                   activation='relu', #kernel_initializer=RandomNormal(mean=0.0, stddev=0.01),
+                   activation='relu',
                    name='gerke_conv2')(x)
         x = MaxPooling2D(pool_size=(3, 3), strides=(2, 2), padding='same',
                          name='gerke_max2')(x)    
         x = BatchNormalization(name='gerke_bn2')(x)
-        
-        
+
         x = Conv2D(filters=256, kernel_size=(5, 5), strides=(1, 1), padding='same',
-                   activation='relu', # kernel_initializer=RandomNormal(mean=0.0, stddev=0.01),
+                   activation='relu',
                    name='gerke_conv3')(x)
         x = MaxPooling2D(pool_size=(3, 3), strides=(2, 2), padding='same',
                          name='gerke_max3')(x)
-
         x = BatchNormalization(name='gerke_bn3')(x)
+
         x = GlobalAveragePooling2D(name='gerke_gap1')(x)
 
-        x = Dense(128, activation='relu', #kernel_initializer=RandomNormal(mean=0.0, stddev=0.01),
+        x = Dense(128, activation='relu',
                   kernel_regularizer=regularizers.l2(0.01),
                   name='gerke_dense1')(x)
         x = BatchNormalization(name='gerke_bn4')(x)
-        x = Dense(128, activation='relu', #kernel_initializer=RandomNormal(mean=0.0, stddev=0.01),
+
+        x = Dense(128, activation='relu',
                   kernel_regularizer=regularizers.l2(0.01),
                   name='gerke_dense2')(x)
-
         x = BatchNormalization(name='gerke_bn5')(x)
+
         predictions = Dense(self.n_outputs,
                   activation='softmax' if self.n_outputs > 1 else 'sigmoid',
-                  #kernel_initializer=#RandomNormal(mean=0.0, stddev=0.01),
                   name='gerke_softmax'+ self._type.value)(x)
 
         self._model = Model(input=input, output=predictions)
 
-        for layer in self._model.layers[-7:]:
-            layer.trainable = False
+        #for layer in self._model.layers[-7:]:
+        #    layer.trainable = False
+
+
+class GerkeBaseModel(BaseModel):
+    def __init__(self, type):
+        super(GerkeBaseModel, self).__init__('gerke_base', type)
+
+    def _prepare_model(self):
+        if self._model is not None:
+            return
+
+        input = Input(shape=self.input_shape)
+        x = input
+
+        x = Conv2D(filters=16, kernel_size=(5, 5), strides=(1, 1), padding='same',
+                   activation='relu',
+                   name='gerke_conv1')(x)
+        x = MaxPooling2D(pool_size=(2, 2), strides=(2, 2), padding='same',
+                         name='gerke_max1')(x)
+
+        x = Conv2D(filters=30, kernel_size=(7, 7), strides=(1, 1), padding='same',
+                   activation='relu',
+                   name='gerke_conv2')(x)
+        x = MaxPooling2D(pool_size=(3, 3), strides=(3, 3), padding='same',
+                         name='gerke_max2')(x)
+
+        x = Conv2D(filters=50, kernel_size=(3, 3), strides=(1, 1), padding='same',
+                   activation='relu',
+                   name='gerke_conv3')(x)
+        x = MaxPooling2D(pool_size=(3, 3), strides=(3, 3), padding='same',
+                         name='gerke_max3')(x)
+
+        x = Flatten(name='gerke_flat_34')(x)
+        x = Dense(34, activation='relu',
+                  kernel_regularizer=regularizers.l2(0.01),
+                  name='gerke_dense1_34')(x)
+        x = Dense(34, activation='relu',
+                  kernel_regularizer=regularizers.l2(0.01),
+                  name='gerke_dense2_34')(x)
+
+        predictions = Dense(self.n_outputs,
+                            activation='softmax' if self.n_outputs > 1 else 'sigmoid',
+                            name='gerke_softmax_34' + self._type.value)(x)
+
+        self._model = Model(input=input, output=predictions)
+
 
 class ModelType(Enum):
-    VGG16 = 'vgg16'
-    Gerke = 'gerke'
+    vgg16 = 'vgg16'
+    gerke = 'gerke'
+    gerke_base = 'gerke_base'
 
 
-models = {ModelType.VGG16: VGG16Model,
-          ModelType.Gerke: GerkeModel}
+models = {ModelType.vgg16: VGG16Model,
+          ModelType.gerke: GerkeModel,
+          ModelType.gerke_base: GerkeBaseModel}

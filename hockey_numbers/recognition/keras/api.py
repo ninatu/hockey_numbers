@@ -1,11 +1,14 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+from model_utils import get_data_generator, compile_model
+
 import json
 import numpy as np
 
 from keras.models import load_model
 from keras import backend as K
 import tensorflow as tf
-
-from model_utils import get_data_generator, compile_model
 
 
 def start_session():

@@ -1,8 +1,14 @@
-import argparse
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+"""Tool for train, test, predict neural networks"""
 
 from datasets import DatasetType, datasets
 from models import ModelType, models, ClassificationType
 from api import start_session, clear_session, evaluate_model, predict_model
+
+import argparse
+
 
 DEFAULT_TEST = 0.2
 DEFAULT_H = 200

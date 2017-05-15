@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
 from keras.preprocessing.image import ImageDataGenerator
 from keras import optimizers
 
