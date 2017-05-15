@@ -59,7 +59,7 @@ class BaseDataset:
         elif type == 'half':
             self._not_player_path = osp.join(DATA_FOLDER, DIR_NOT_NUMBER_HALF)
         else:
-            self._not_player_path = osp.join(DATA_FOLDER, DIR_NOT_NUMBER)
+            raise NotImplementedError
 
     @property
     def name(self):
