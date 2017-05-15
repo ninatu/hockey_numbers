@@ -35,7 +35,7 @@ class ClassificationType(Enum):
 class AbstractModel(metaclass=ABCMeta):
 
     @abstractmethod
-    def train(self, train_data, valid_data, epochs, freeze_base, test_data):
+    def train(self, train_dset, epochs, freeze_base, test_dset):
         pass
 
     @abstractmethod
@@ -166,8 +166,7 @@ class BaseModel(AbstractModel):
                              min_delta=min_delta,
                              patience=patience)
 
-
-    def _get_reducer(self, factor=np.sqrt(0.1), patience=3, min_lr=0.00001):
+    def _get_reducer(self, factor=0.1, patience=3, min_lr=0.00001):
         return ReduceLROnPlateau(monitor='val_loss',
                                        factor=factor,
                                        verbose=1,
@@ -276,14 +275,14 @@ class VGG16Model(BaseModel):
 
         x = self._base_model.layers[-1].output#self._base_model.output
 
-        #x = Flatten(name='vgg16_flat')
+        #x = Flatten(name='vgg16_flat')(x)
         x = GlobalAveragePooling2D(name='vgg16_gap1')(x)
         x = BatchNormalization(name='vgg16_bn1')(x)
         #x = Dense(128, activation='relu',
         #          #kernel_initializer=RandomNormal(mean=0.0, stddev=0.001),
         #          kernel_regularizer=regularizers.l2(0.01),
         #          name='vgg16_dense1')(x)
-        #x = BatchNormalization(name='vgg16_bn1')(x)
+        #x = BatchNormalization(name='vgg16_bn2')(x)
         #x = Dropout(0.5, name='vgg16_drop1')(x)
         #x = Dense(1024, activation='relu', kernel_initializer=RandomNormal(mean=0.0, stddev=0.01),
         #          name = 'vgg16_dense2')(x)
@@ -297,6 +296,8 @@ class VGG16Model(BaseModel):
 
 
         self._model = Model(input=self._base_model.input, output=predictions)
+        for layer in self._model.layers[-3:]:
+            layer.trainable = False
    
     def _freeze_base_model(self, n=4):
         print("FREEZE LAYER {}, UNFREEZ {}".format(len(self._base_model.layers)  - n, n))
@@ -309,15 +310,15 @@ class VGG16Model(BaseModel):
     def _unfreeze_base_model(self, n=15):
         n = len(self._base_model.layers) 
         print("FREEZE LAYER {}, UNFREEZ {}".format(len(self._base_model.layers) - n, n))
-        for layer in self._base_model.layers[:-n]:
+        for layer in self._base_model.layers[:4]:
             layer.trainable = False
-        for layer in self._base_model.layers[-n:]:
+        for layer in self._base_model.layers[4:]:
             layer.trainable = True
 
-    def train(self, train_data, valid_data, epochs, freeze_base=0,  test_data=None):
-        super(VGG16Model, self).train(train_data, valid_data, epochs, freeze_base, 
-                                      mult_lr=1, 
-                                      test_data=test_data)
+    def train(self, train_dset,  epochs, freeze_base=0,  test_dset=None):
+        super(VGG16Model, self).train(train_dset, epochs, freeze_base, 
+                                      mult_lr=0.1, 
+                                      test_dset=test_dset)
 
 class GerkeModel(BaseModel):
     def __init__(self, type):

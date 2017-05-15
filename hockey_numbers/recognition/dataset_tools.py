@@ -140,6 +140,9 @@ def balance(args):
 
 def crop_square(img):
     img = scipy.misc.imresize(img, (128, 64))
+    #h = img.shape[0]
+    #w = img.shape[1]
+    #return img[:int(h/2)]#
     return img[14:58, 10:54]
 
 
