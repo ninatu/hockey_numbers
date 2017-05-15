@@ -182,8 +182,8 @@ class BaseModel(AbstractModel):
                                   n_outputs=self.n_outputs,
                                   shuffle=True,
                                   rotation_range=0,
-                                  width_shift_range=0.1,
-                                  height_shift_range=0.1,
+                                  width_shift_range=0,
+                                  height_shift_range=0,
                                   featurewise_std_normalization=False)
 
     def _get_test_generator(self, data, shuffle=False):
@@ -324,7 +324,7 @@ class GerkeModel(BaseModel):
         super(GerkeModel, self).__init__('gerke', type)
     
     
-    def _prepare_model(self):
+    def _prepare_model_base(self):
         if self._model is not None:
             return
 
@@ -358,30 +358,27 @@ class GerkeModel(BaseModel):
         #x = GlobalAveragePooling2D(name='gerke_gap1')(x)
         #x = BatchNormalization(name='gerke_bn3')(x)
 
-        x = Flatten(name='gerke_flat')(x)
-        x = BatchNormalization(name='gerke_bn1')(x)
+        x = Flatten(name='gerke_flat_34')(x)
+        #x = BatchNormalization(name='gerke_bn1')(x)
         x = Dense(34, activation='relu', #kernel_initializer=RandomNormal(mean=0.0, stddev=0.01),
                   kernel_regularizer=regularizers.l2(0.01),
-                  name='gerke_dense1')(x)
-        #x = BatchNormalization(name='gerke_bn4')(x)
-        #x = Dense(128, activation='relu', #kernel_initializer=RandomNormal(mean=0.0, stddev=0.01),
-        #          kernel_regularizer=regularizers.l2(0.01),
-        #          name='gerke_dense2')(x)
+                  name='gerke_dense1_34')(x)
+        #x = BatchNormalization(name='gerke_bn_34')(x)
+        x = Dense(34, activation='relu', #kernel_initializer=RandomNormal(mean=0.0, stddev=0.01),
+                  kernel_regularizer=regularizers.l2(0.01),
+                  name='gerke_dense2_34')(x)
 
         #x = Dropout(0.5, name='gerke_dr1')(x)
-        x = BatchNormalization(name='gerke_bn5')(x)
+        #x = BatchNormalization(name='gerke_bn_34_2')(x)
         predictions = Dense(self.n_outputs,
                   activation='softmax' if self.n_outputs > 1 else 'sigmoid',
                   #kernel_initializer=#RandomNormal(mean=0.0, stddev=0.01),
-                  name='gerke_softmax'+ self._type.value)(x)
+                  name='gerke_softmax_34'+ self._type.value)(x)
 
         self._model = Model(input=input, output=predictions)
+        
 
-        if self._pretrained is not None:
-            self._model.load_weights(self._pretrained, by_name=True)
-
-
-    def _prepare_model2(self):
+    def _prepare_model(self):
         if self._model is not None:
             return
 
@@ -413,10 +410,7 @@ class GerkeModel(BaseModel):
 
         x = BatchNormalization(name='gerke_bn3')(x)
         x = GlobalAveragePooling2D(name='gerke_gap1')(x)
-        #x = BatchNormalization(name='gerke_bn3')(x)
 
-        #x = Flatten(name='gerke_flat')(x)
-        #x = BatchNormalization(name='gerke_bn1')(x)
         x = Dense(128, activation='relu', #kernel_initializer=RandomNormal(mean=0.0, stddev=0.01),
                   kernel_regularizer=regularizers.l2(0.01),
                   name='gerke_dense1')(x)
@@ -425,7 +419,6 @@ class GerkeModel(BaseModel):
                   kernel_regularizer=regularizers.l2(0.01),
                   name='gerke_dense2')(x)
 
-        #x = Dropout(0.5, name='gerke_dr1')(x)
         x = BatchNormalization(name='gerke_bn5')(x)
         predictions = Dense(self.n_outputs,
                   activation='softmax' if self.n_outputs > 1 else 'sigmoid',
@@ -434,9 +427,8 @@ class GerkeModel(BaseModel):
 
         self._model = Model(input=input, output=predictions)
 
-        if self._pretrained is not None:
-            self._model.load_weights(self._pretrained, by_name=True)
-
+        for layer in self._model.layers[-7:]:
+            layer.trainable = False
 
 class ModelType(Enum):
     VGG16 = 'vgg16'
