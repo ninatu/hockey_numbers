@@ -433,4 +433,3 @@ datasets = {DatasetType.nnsd: NNSD,
             DatasetType.real2train_half: Real2Train_half,
             DatasetType.real2test_crop: Real2Test_crop,
             DatasetType.real2test_half: Real2Test_half}
-            
