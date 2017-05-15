@@ -8,10 +8,10 @@ from enum import Enum
 
 from models import ClassificationType
 
-DATA_FOLDER = 'data'
+#DATA_FOLDER = 'data'
 DIR_NOT_NUMBER = 'not_number'
 DIR_NOT_NUMBER_CROP = 'not_number_crop'
-#DATA_FOLDER = '/home/GRAPHICS2/19n_tul/data'
+DATA_FOLDER = '/home/GRAPHICS2/19n_tul/data'
 
 
 def get_dirs(path):
@@ -66,6 +66,7 @@ class BaseDataset:
 
     @property
     def is_prepared(self):
+        print(self._train_path)
         return osp.exists(self._train_path)
 
     def get_train(self, shape):
@@ -74,7 +75,7 @@ class BaseDataset:
     def get_test(self, shape):
         return (self._test_path, self._get_sample(self._test_path, shape))
 
-    def _get_sample(self, path, shape, max_count=5000):
+    def _get_sample(self, path, shape, max_count=20000):
         files = recursively_get_files(path)
         random.shuffle(files)
         files = files[:max_count]
@@ -236,11 +237,32 @@ class NNSD_crop(BaseDataset):
         super(NNSD_crop, self).__init__(NNSD_crop.DATA_PATH, 'crop')
 
 
+class NNSD_half(BaseDataset):
+    DATA_PATH = 'NNSD_half'
+
+    def __init__(self):
+        super(NNSD_half, self).__init__(NNSD_half.DATA_PATH, 'crop')
+
+
 class RISD_crop(BaseDataset):
     DATA_PATH = 'RISD_crop'
 
     def __init__(self):
         super(RISD_crop, self).__init__(RISD_crop.DATA_PATH, 'crop')
+
+
+class RISD_half(BaseDataset):
+    DATA_PATH = 'RISD_half'
+
+    def __init__(self):
+        super(RISD_half, self).__init__(RISD_half.DATA_PATH, 'crop')
+
+
+class NaiveSD_half(BaseDataset):
+    DATA_PATH = 'NaiveSD_half'
+
+    def __init__(self):
+        super(NaiveSD_half, self).__init__(NaiveSD_half.DATA_PATH, 'crop')
 
 
 class NaiveSD_crop(BaseDataset):
@@ -250,17 +272,103 @@ class NaiveSD_crop(BaseDataset):
         super(NaiveSD_crop, self).__init__(NaiveSD_crop.DATA_PATH, 'crop')
 
 
+class NaiveImpSD_half(BaseDataset):
+    DATA_PATH = 'NaiveImpSD_half'
+
+    def __init__(self):
+        super(NaiveImpSD_half, self).__init__(NaiveImpSD_half.DATA_PATH, 'crop')
+
+
+class NaiveImpSD_crop(BaseDataset):
+    DATA_PATH = 'NaiveImpSD_crop'
+
+    def __init__(self):
+        super(NaiveImpSD_crop, self).__init__(NaiveImpSD_crop.DATA_PATH, 'crop')
+
+
+
 class Real_crop(BaseDataset):
     DATA_PATH = 'real_crop'
 
     def __init__(self):
         super(Real_crop, self).__init__(Real_crop.DATA_PATH, 'crop')
 
+
+class Real_half(BaseDataset):
+    DATA_PATH = 'real_half'
+
+    def __init__(self):
+        super(Real_half, self).__init__(Real_half.DATA_PATH, 'crop')
+
+
+class Real2Train_crop(BaseDataset):
+    DATA_PATH = 'real2train'
+
+    def __init__(self):
+        super(Real2Train_crop, self).__init__(Real2Train_crop.DATA_PATH, 'crop')
+
+
+class Real2Test_crop(BaseDataset):
+    DATA_PATH = 'real2test'
+
+    def __init__(self):
+        super(Real2Test_crop, self).__init__(Real2Test_crop.DATA_PATH, 'crop')
+
+class Real2Train_half(BaseDataset):
+    DATA_PATH = 'real2train_half'
+
+    def __init__(self):
+        super(Real2Train_half, self).__init__(Real2Train_half.DATA_PATH, 'crop')
+
+
+class Real2Test_half(BaseDataset):
+    DATA_PATH = 'real2test_half'
+
+    def __init__(self):
+        super(Real2Test_half, self).__init__(Real2Test_half.DATA_PATH, 'crop')
+
+
+class FullHardSD_crop(BaseDataset):
+    DATA_PATH = 'FullHardSD_crop'
+
+    def __init__(self):
+        super(FullHardSD_crop, self).__init__(FullHardSD_crop.DATA_PATH, 'crop')
+
+
+class FullHardSD_half(BaseDataset):
+    DATA_PATH = 'FullHardSD_half'
+
+    def __init__(self):
+        super(FullHardSD_half, self).__init__(FullHardSD_half.DATA_PATH, 'crop')
+
+
+
 class FullSD_crop(BaseDataset):
     DATA_PATH = 'FullSD_crop'
 
     def __init__(self):
         super(FullSD_crop, self).__init__(FullSD_crop.DATA_PATH, 'crop')
+
+
+class FullSD_half(BaseDataset):
+    DATA_PATH = 'FullSD_half'
+
+    def __init__(self):
+        super(FullSD_half, self).__init__(FullSD_half.DATA_PATH, 'crop')
+
+
+class SVHN_crop(BaseDataset):
+    DATA_PATH = 'SVHN_crop'
+
+    def __init__(self):
+        super(SVHN_crop, self).__init__(SVHN_crop.DATA_PATH, 'crop')
+
+
+class SVHN_half(BaseDataset):
+    DATA_PATH = 'SVHN_half'
+
+    def __init__(self):
+        super(SVHN_half, self).__init__(SVHN_half.DATA_PATH, 'crop')
 
 
 class DatasetType(Enum):
@@ -270,10 +378,35 @@ class DatasetType(Enum):
     full = 'full'
     real = 'real'
     nnsd_crop = 'nnsd_crop'
+    nnsd_half = 'nnsd_half'
+
     risd_crop = 'risd_crop'
+    risd_half = 'risd_half'
+    
+    naive_imp_crop = 'naive_imp_crop'
+    naive_imp_half = 'naive_imp_half'
+
     naive_crop = 'naive_crop'
+    naive_half = 'naive_half'
+
     full_crop = 'full_crop'
+    full_half = 'full_half'
+
+    full_hard_crop = 'full_hard_crop'
+    full_hard_half = 'full_hard_half'
+    
     real_crop = 'real_crop'
+    real_half = 'real_half'
+ 
+    svhn_crop = 'svhn_crop'
+    svhn_half = 'svhn_half'
+
+    real2train_crop = 'real2train_crop'
+    real2train_half = 'real2train_half'
+ 
+    real2test_crop = 'real2test_crop'
+    real2test_half = 'real2test_half'
+ 
 
 datasets = {DatasetType.nnsd: NNSD,
             DatasetType.risd: RISD,
@@ -281,7 +414,22 @@ datasets = {DatasetType.nnsd: NNSD,
             DatasetType.full: FullSD,
             DatasetType.real: Real,
             DatasetType.risd_crop: RISD_crop,
+            DatasetType.risd_half: RISD_half,
             DatasetType.nnsd_crop:NNSD_crop,
+            DatasetType.nnsd_half:NNSD_half,
             DatasetType.naive_crop: NaiveSD_crop,
+            DatasetType.naive_half: NaiveSD_half,
+            DatasetType.naive_imp_crop: NaiveImpSD_crop,
+            DatasetType.naive_imp_half: NaiveImpSD_half,
             DatasetType.real_crop: Real_crop,
-            DatasetType.full_crop: FullSD_crop}
+            DatasetType.real_half: Real_half,
+            DatasetType.svhn_crop: SVHN_crop,
+            DatasetType.svhn_half: SVHN_half,
+            DatasetType.full_crop: FullSD_crop,
+            DatasetType.full_half: FullSD_half,
+            DatasetType.full_hard_crop: FullHardSD_crop,
+            DatasetType.full_hard_half: FullHardSD_half,
+            DatasetType.real2train_crop: Real2Train_crop,
+            DatasetType.real2train_half: Real2Train_half,
+            DatasetType.real2test_crop: Real2Test_crop,
+            DatasetType.real2test_half: Real2Test_half}
