@@ -301,6 +301,33 @@ class Real_half(BaseDataset):
         super(Real_half, self).__init__(Real_half.DATA_PATH, 'crop')
 
 
+class Real2Train_crop(BaseDataset):
+    DATA_PATH = 'real2train'
+
+    def __init__(self):
+        super(Real2Train_crop, self).__init__(Real2Train_crop.DATA_PATH, 'crop')
+
+
+class Real2Test_crop(BaseDataset):
+    DATA_PATH = 'real2test'
+
+    def __init__(self):
+        super(Real2Test_crop, self).__init__(Real2Test_crop.DATA_PATH, 'crop')
+
+class Real2Train_half(BaseDataset):
+    DATA_PATH = 'real2train_half'
+
+    def __init__(self):
+        super(Real2Train_half, self).__init__(Real2Train_half.DATA_PATH, 'crop')
+
+
+class Real2Test_half(BaseDataset):
+    DATA_PATH = 'real2test_half'
+
+    def __init__(self):
+        super(Real2Test_half, self).__init__(Real2Test_half.DATA_PATH, 'crop')
+
+
 class FullHardSD_crop(BaseDataset):
     DATA_PATH = 'FullHardSD_crop'
 
@@ -374,6 +401,12 @@ class DatasetType(Enum):
     svhn_crop = 'svhn_crop'
     svhn_half = 'svhn_half'
 
+    real2train_crop = 'real2train_crop'
+    real2train_half = 'real2train_half'
+ 
+    real2test_crop = 'real2test_crop'
+    real2test_half = 'real2test_half'
+ 
 
 datasets = {DatasetType.nnsd: NNSD,
             DatasetType.risd: RISD,
@@ -395,4 +428,9 @@ datasets = {DatasetType.nnsd: NNSD,
             DatasetType.full_crop: FullSD_crop,
             DatasetType.full_half: FullSD_half,
             DatasetType.full_hard_crop: FullHardSD_crop,
-            DatasetType.full_hard_half: FullHardSD_half}
+            DatasetType.full_hard_half: FullHardSD_half,
+            DatasetType.real2train_crop: Real2Train_crop,
+            DatasetType.real2train_half: Real2Train_half,
+            DatasetType.real2test_crop: Real2Test_crop,
+            DatasetType.real2test_half: Real2Test_half}
+            

@@ -182,8 +182,8 @@ class BaseModel(AbstractModel):
                                   n_outputs=self.n_outputs,
                                   shuffle=True,
                                   rotation_range=0,
-                                  width_shift_range=0,
-                                  height_shift_range=0,
+                                  width_shift_range=0.1,
+                                  height_shift_range=0.1,
                                   featurewise_std_normalization=False)
 
     def _get_test_generator(self, data, shuffle=False):
@@ -298,6 +298,8 @@ class VGG16Model(BaseModel):
 
 
         self._model = Model(input=self._base_model.input, output=predictions)
+        for layer in self._model.layers[-3:]:
+            layer.trainable = False
    
     def _freeze_base_model(self, n=4):
         print("FREEZE LAYER {}, UNFREEZ {}".format(len(self._base_model.layers)  - n, n))
