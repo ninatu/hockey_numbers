@@ -6,6 +6,8 @@ import shutil
 import random
 import tqdm
 import scipy.misc
+import hashlib
+import base64
 
 
 def get_subdirs(in_dir):
@@ -161,6 +163,60 @@ def crop(args):
             scipy.misc.imsave(out_path, img)
 
 
+def svhn_crop(args):
+    def crop_with_pad(img, x1, y1, x2, y2):
+        h, w, c = img.shape
+        max_pad = int(max(abs(min(x1, 0)), abs(min(y1, 0)), abs(min(w - x2, 0)), abs(min(h - y2, 0))))
+        if max_pad > 200:
+            return None
+        img = np.pad(img, pad_width=max_pad, mode='edge')[:, :, max_pad:max_pad + 3]
+        return img[y1 + max_pad:y2 + max_pad, x1 + max_pad:x2 + max_pad]
+
+    def sample_crop(img, x, y, w, h, pad_min, pad_max):
+        pad_w1 = int(w * (pad_min + random.random() + (pad_max - pad_min)))
+        pad_h1 = int(h * (pad_min + random.random() + (pad_max - pad_min)))
+        pad_w2 = int(w * (pad_min + random.random() + (pad_max - pad_min)))
+        pad_h2 = int(h * (pad_min + random.random() + (pad_max - pad_min)))
+
+        x1 = x - pad_w1
+        x2 = x + w + pad_w2
+        y1 = y - pad_h1
+        y2 = y + h + pad_h2
+        return crop_with_pad(img, x1, y1, x2, y2)
+
+    def md5_hash(arr):
+        arr = np.array(arr, dtype=arr.dtype)
+        md5 = hashlib.md5()
+        arr = base64.b64encode(arr)
+        md5.update(arr)
+        return md5.hexdigest()
+
+    out_dir = args.out_dir
+    ensure_dir(out_dir)
+    for i in range(1, 101):
+        ensure_dir(osp.join(out_dir, str(i)))
+
+    with open(args.gt) as gt_file:
+        for line in tqdm.tqdm(gt_file.readlines()):
+            parts = line.strip().split()
+            img_path = parts[0]
+            img_path = osp.join(args.img_dir, img_path)
+            number, y, x, y2, x2 = list(map(int, parts[1:]))
+
+            img = scipy.misc.imread(img_path)
+            if len(img.shape) != 3 or img.shape[2] != 3:
+                continue
+            img = sample_crop(img, x, y, x2 - x, y2 - y, args.min, args.max)
+            if img is None:
+                continue
+            img_name = '{}.png'.format(md5_hash(img))
+            img_name = osp.join(out_dir, str(number), img_name)
+            if img.shape[0] * img.shape[1] < 400:
+                continue
+            scipy.misc.imsave(img_name, img)
+
+
+
 def main():
     parser = argparse.ArgumentParser(description='Dataset tools')
     subparsers = parser.add_subparsers()
@@ -192,6 +248,14 @@ def main():
     parser_split.add_argument('in_dir', type=str, nargs='?', help='input dir')
     parser_split.add_argument('-o', '--out_dirs', type=str, nargs=2, required=True, help='two output dirs')
     parser_split.set_defaults(func=split_dataset)
+
+    parser_svhn = subparsers.add_parser('svhn', help='crop images from svhn')
+    parser_svhn.add_argument('img_dir', type=str, nargs='?', help='image dir')
+    parser_svhn.add_argument('gt', type=str, nargs='?', help='path to gt')
+    parser_svhn.add_argument('--min', type=float, nargs='?', help='min persent pad')
+    parser_svhn.add_argument('--max', type=float, nargs='?', help='max persent pad')
+    parser_svhn.add_argument('-o', '--out_dir', type=str, nargs='?', required=True, help='output dir')
+    parser_svhn.set_defaults(func=svhn_crop)
 
     args = parser.parse_args()
     args.func(args)
