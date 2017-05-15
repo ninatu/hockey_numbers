@@ -12,10 +12,7 @@ import cv2
 import numpy as np
 from sklearn.externals import joblib
 import os.path as osp
-
-CLASSIFY_PATH = './classifying'
-CLASSIFY_DATA_PATH = '/media/nina/Seagate Backup Plus Drive/hockey/other/samples/'
-CLASSIFIER_H, CLASSIFIER_W = (64, 32)
+from constants import CLASSIFY_PATH, CLASSIFY_DATA_PATH, CLASSIFIER_H, CLASSIFIER_W
 
 sys.path.append(osp.join(osp.dirname(__file__), CLASSIFY_PATH))
 from classifying.classify import get_classifier, extract_feature

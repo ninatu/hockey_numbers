@@ -12,6 +12,11 @@ VIDEO_DIR = '/media/nina/Seagate Backup Plus Drive/hockey/processed_video/'
 TEMPLATE_VIDEO = "cska_akbars_cam_3_{:d}_{:d}.avi"
 VIDEO_FRAME_SIZE = 1200
 
+CLASSIFY_PATH = './classifying'
+""" PATH WITH PRETRAINED player_clf.pkl, buckets.pkl """
+CLASSIFY_DATA_PATH = '/media/nina/Seagate Backup Plus Drive/hockey/other/samples/'
+CLASSIFIER_H, CLASSIFIER_W = (64, 32)
+
 """ Constants for filtering blobs """
 
 BLOB_MIN_HEIGHT = 70

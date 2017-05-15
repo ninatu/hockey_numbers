@@ -4,10 +4,10 @@
 """Work with blobs on images"""
 
 import cv2
-import numpy as np
 
 from constants import BLOB_MIN_HEIGHT, BLOB_MAX_HEIGHT, BLOB_MIN_WIDTH, BLOB_MAX_WIDTH
 from constants import FIELD_Y, FIELD_H, FIELD_X, FIELD_W
+
 
 class Blob(object):
     def __init__(self, x, y, width, height, area, centroid, mask=None):
@@ -30,7 +30,8 @@ class Blob(object):
                     centroid=centroid,
                     mask=mask)
 
-def blobsIOU(blob1, blob2):
+
+def blobs_IOU(blob1, blob2):
     #intersection
 
     """right intersection
@@ -49,47 +50,44 @@ def blobsIOU(blob1, blob2):
         return 0.0
 
 
-def getNearestBlob(blob, listBlobs, minIOU=0.2):
-    maxIOU = 0
-    bestI = -1;
-    for i, candidat in enumerate(listBlobs):
-        iou = blobsIOU(blob, candidat)
-        if iou > maxIOU:
-            maxIOU = iou
-            bestI = i
-    if maxIOU > minIOU:
-        return bestI
+def get_nearest_blob(blob, blobs_list, min_IOU=0.2):
+    max_IOU = 0
+    best_i = -1
+    for i, candidate in enumerate(blobs_list):
+        iou = blobs_IOU(blob, candidate)
+        if iou > max_IOU:
+            max_IOU = iou
+            best_i = i
+    if max_IOU > min_IOU:
+        return best_i
     else:
         return -1
 
 
-def filterBlobsBySize(blobs, minHeight=BLOB_MIN_HEIGHT,
-                      maxHeight=BLOB_MAX_HEIGHT,
-                      minWidth= BLOB_MIN_WIDTH,
-                      manWidth=BLOB_MAX_WIDTH):
-    goodBlobs = []
+def filter_blobs_by_size(blobs, min_height=BLOB_MIN_HEIGHT,
+                         max_height=BLOB_MAX_HEIGHT,
+                         min_width= BLOB_MIN_WIDTH,
+                         man_width=BLOB_MAX_WIDTH):
+    good_blobs = []
     for blob in blobs:
-        if minHeight <= blob.height <= maxHeight and \
-                                minWidth <= blob.width <= manWidth:
-            goodBlobs.append(blob)
-    return goodBlobs
+        if min_height <= blob.height <= max_height and min_width <= blob.width <= man_width:
+            good_blobs.append(blob)
+    return good_blobs
 
-def filterBlobsByField(blobs, minHeight=FIELD_Y,
-                       maxHeight=FIELD_H,
-                       minWidth=FIELD_X,
-                       maxWidth=FIELD_W):
-    goodBlobs = []
+
+def filter_blobs_by_field(blobs, y=FIELD_Y, h=FIELD_H, x=FIELD_X, w=FIELD_W):
+    good_blobs = []
     for blob in blobs:
-        if minHeight <= blob.y and blob.y  + blob.height <= maxHeight and \
-            minWidth <= blob.x and blob.x + blob.width <= maxWidth:
+        if y <= blob.y and blob.y + blob.height <= h and \
+           x <= blob.x and blob.x + blob.width <= w:
+            good_blobs.append(blob)
 
-            goodBlobs.append(blob)
-    return goodBlobs
+    return good_blobs
 
 
-def getBlobsFromMasks(mask, saveMasks=False):
-    retval, labels, stats, centroids = cv2.connectedComponentsWithStats(mask, connectivity=4)
-    if saveMasks:
+def get_blobs_from_masks(mask, save_masks=False):
+    ret_val, labels, stats, centroids = cv2.connectedComponentsWithStats(mask, connectivity=4)
+    if save_masks:
         blobs = [Blob.create_from_stats(stats[i, :], centroids[i, :], labels==i) for i in range(stats.shape[0])]
     else:
         blobs = [Blob.create_from_stats(stats[i, :], centroids[i, :]) for i in range(stats.shape[0])]

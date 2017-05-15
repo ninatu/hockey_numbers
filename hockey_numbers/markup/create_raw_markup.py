@@ -1,3 +1,8 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+"""Prepare data for markup"""
+
 from utils.markup import Markup
 from constants import TEMPLATE_FRAME
 from save_frames_to_dir import save_frames_to_dir

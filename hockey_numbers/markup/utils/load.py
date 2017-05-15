@@ -6,7 +6,7 @@
 import scipy.misc
 import os.path as osp
 
-from hockey_numbers.markup.constants import FRAME_DIR, TEMPLATE_FRAME, MASK_DIR, TEMPLATE_MASK
+from constants import FRAME_DIR, TEMPLATE_FRAME, MASK_DIR, TEMPLATE_MASK
 
 
 def load_frame(numb=None, name=None):
@@ -18,6 +18,7 @@ def load_frame(numb=None, name=None):
 
     frame = scipy.misc.imread(name)
     return frame
+
 
 def load_mask(numb=None, name=None):
     """Return None if mask is not saved"""

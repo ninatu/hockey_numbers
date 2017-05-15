@@ -5,7 +5,6 @@
 
 import os
 import os.path as osp
-import sys
 import argparse
 import tqdm
 import cv2

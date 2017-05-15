@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
 from utils.markup import Markup
 from utils.image_process import crop_by_rect
 from utils.load import load_frame, load_mask
@@ -32,9 +35,11 @@ def merge_markup(args):
     with open(args.output, 'w') as f_out:
         json.dump(markup.to_json(is_annotation=True), f_out)
 
+
 def ensure_dir(dir_name):
     if not osp.exists(dir_name):
         os.mkdir(dir_name)
+
 
 def save_by_mark(args):
     markup_file = args.markup_file
@@ -42,16 +47,16 @@ def save_by_mark(args):
     out_name = args.out_name
     save_format = args.save_format
     with_masks = not args.not_masks
-    distibute = args.distribute
+    distribute = args.distribute
 
     assert save_format == 'dir' or save_format == 'hdf5'
-    assert distibute and mark == 'number'
+    assert distribute and mark == 'number'
 
     markup = Markup()
     markup.merge(markup_file)
     marked_frame = markup.get_by_mark(mark)
 
-    if save_format=='dir':
+    if save_format == 'dir':
         ensure_dir(out_name)
         if with_masks:
             mask_dir = os.path(out_name, 'mask')
@@ -61,7 +66,7 @@ def save_by_mark(args):
         else:
             img_dir = out_name
 
-        if distibute:
+        if distribute:
             for i in range(0, 100):
                 ensure_dir(osp.join(img_dir, str(i)))
 
@@ -77,7 +82,7 @@ def save_by_mark(args):
                 img_name = obj.data['img_name']
                 mark_data = obj.data[mark]
 
-                img_path = osp.join(img_dir, img_name) if not distibute else osp.join(img_dir, str(mark_data), img_name)
+                img_path = osp.join(img_dir, img_name) if not distribute else osp.join(img_dir, str(mark_data), img_name)
                 scipy.misc.imsave(img_path, img)
 
                 if with_masks:
@@ -85,8 +90,7 @@ def save_by_mark(args):
                     mask_path = osp.join(mask_dir, img_name)
                     scipy.misc.imsave(mask_path, mask)
 
-
-    if save_format=='hdf5':
+    if save_format == 'hdf5':
         out_db = h5py.File(out_name, 'w')
         img_gr = out_db.create_group('image')
         if with_masks:
@@ -110,6 +114,7 @@ def save_by_mark(args):
                     img_dset = mask_gr.create_dataset(img_name, mask.shape, '|u1', mask)
                     img_dset.attrs[mark] = obj.data[mark]
 
+
 def main():
     parser = argparse.ArgumentParser()
     subparsers = parser.add_subparsers()
@@ -130,9 +135,8 @@ def main():
     parser_save.add_argument('--save_format', type=str, nargs='?', default='hdf5', help='hdf5 or dir, default=hdf5')
     parser_save.add_argument('--not_masks', action='store_true', help='not save masks')
     parser_save.add_argument('--distribute', action='store_true',
-                            help='distribute by subdirs, only for save_format=dir anf mark=number')
+                             help='distribute by subdirs, only for save_format=dir anf mark=number')
     parser_save.set_defaults(func=save_by_mark)
-
 
     args = parser.parse_args()
     args.func(args)

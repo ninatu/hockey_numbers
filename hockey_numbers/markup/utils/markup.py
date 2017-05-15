@@ -46,10 +46,10 @@ class FrameObject:
 
     def to_json(self):
         obj_dict = deepcopy(self._data)
-        obj_dict['body_rect'] = { 'x': int(self.x),
-                                  'y': int(self.y),
-                                  'w': int(self.w),
-                                  'h': int(self.h)}
+        obj_dict['body_rect'] = {'x': int(self.x),
+                                 'y': int(self.y),
+                                 'w': int(self.w),
+                                 'h': int(self.h)}
         return obj_dict
 
 
@@ -141,6 +141,3 @@ class Markup:
                     marked_frames[frame_name].add_obj(obj)
 
         return marked_frames
-
-
-
