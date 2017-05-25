@@ -3,4 +3,4 @@
 
 """Constants for module"""
 
-SYNTH_TEXT_DATA_DIR = '../../data/synth_text/data/'
+SYNTH_TEXT_DATA_DIR = '../data/synth_text/data/'

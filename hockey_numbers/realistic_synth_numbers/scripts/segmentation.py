@@ -33,13 +33,3 @@ def segmentFromContourMap(contourMap):
     labels = range(1, nLabels)
     areas = [(seg == label).sum() for label in labels]
     return seg, labels, areas
-    
-
-if __name__ == '__main__':
-    #filename = '/home/nina/Documents/hockey_tracking/number_recognition/number_recognition/data/playersWithoutNumber/424628.png'
-    #inputSegmentImg = cv2.imread(filename)
-    #seg, labels, areas = segmentFromContourMap(inputSegmentImg[:, :, 0] / 256 > 0.11)
-    #segmentMarking, label, area = segmentNormalize(inputSegmentImg)
-    import scipy.io
-    contourMap = scipy.io.loadmat('/home/nina/Documents/hockey_tracking/number_recognition/SynthText/data/img2/ucm.mat')['ucm']
-    
