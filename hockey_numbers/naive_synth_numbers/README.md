@@ -13,3 +13,6 @@ dataset:
     - img1: img_dset1
         ...
     - imgN: img_dsetN
+
+To unpack the ouput hdf5 file into a directory, run
+`extract_to_dir.py [-h] [h5file] [outdir]`
