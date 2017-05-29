@@ -50,7 +50,8 @@ def save_by_mark(args):
     distribute = args.distribute
 
     assert save_format == 'dir' or save_format == 'hdf5'
-    assert distribute and mark == 'number'
+    if distribute:
+        assert mark == 'number'
 
     markup = Markup()
     markup.merge(markup_file)
