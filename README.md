@@ -2,8 +2,6 @@
 
 Code for the generation of semi-synthetic data for the problem of recognition of numbers on the form of hockey players, as well as experiments with neuronets for recognition of numbers.
 
-## License
-
 ## Dependencies
 Code is written in Python. The main dependencies are:
 
